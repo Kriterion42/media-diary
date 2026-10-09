@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="surface">#1A1430</color>
+    <color name="ic_bg">#2A1B33</color>
+    <color name="primary">#B04A78</color>
+    <color name="primary_container">#F2B8D0</color>
+    <color name="on_primary_container">#3E1029</color>
+</resources>

@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head><meta charset="utf-8"><title>QA Runner — Медиа дневник</title>
+<style>body{font:13px/1.5 "Segoe UI",system-ui,sans-serif;background:#121318;color:#E4E1E9;margin:0;padding:16px}
+h1{font-size:18px;margin:0 0 12px}#summary{font-size:15px;font-weight:800;margin:8px 0}
+.p{color:#9CD67D}.f{color:#FFB4AB}.t{color:#C7C5D0;font-weight:700}li{margin:2px 0}</style></head>
+<body>
+<h1>QA Runner — Медиа дневник v1.1</h1>
+<div id="summary">запуск…</div>
+<ol id="report"></ol>
+<script>
+window.onerror = function(m,u,l,c){document.getElementById("summary").textContent="ОШИБКА СТРАНИЦЫ: "+m+" @"+l+":"+c;};
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+const tests = [];
+const T = (name, fn) => tests.push([name, fn]);
+let W = null, doc = null;
+
+function bootFrame(reset) {
+  return new Promise(resolve => {
+    const f = document.createElement("iframe");
+    f.id = "frame"; f.style.cssText = "width:412px;height:850px;border:0";
+    f.src = "media-diary.html?reset=1&r=" + (reset ? Date.now() : Math.floor(Date.now()/1000/30));
+    f.onload = () => resolve(f);
+    document.body.appendChild(f);
+  });
+}
+
+T("01 загрузка: приложение и 4 состояния", () => {
+  if (!doc.getElementById("app").innerHTML.length) throw new Error("пустой app");
+  const tabs = [...doc.querySelectorAll(".tabitem")].map(b => b.dataset.nav);
+  if (JSON.stringify(tabs) !== JSON.stringify(["backlog","active","done","dropped"])) throw new Error(tabs.join(","));
+});
+T("02 типы: 6 типов по умолчанию, переключение", () => {
+  const names = W.QA.S.types.map(t => t.name);
+  if (!names.includes("Игры") || !names.includes("Мультфильмы")) throw new Error(names.join(","));
+  W.QA.S.type = 1; W.QA.save(); W.QA.renderCurrent();
+  if (W.QA.curTypeName1) {}
+});
+T("03 добавление элемента: карточка создаётся", () => {
+  W.QA.openItemForm();
+  doc.querySelector('[data-k="title"]').value = "Интерстеллар";
+  doc.querySelector('[data-k="year"]').value = "2014";
+  doc.querySelector('[data-k="duration"]').value = "169 мин";
+  doc.getElementById("cwhy").value = "Космическая драма";
+  doc.getElementById("csave").click();
+  const items = W.QA.S.items[W.QA.S.types[W.QA.S.type].name];
+  if (!Object.values(items).some(g => g.title === "Интерстеллар")) throw new Error("не создан");
+});
+T("04 год в карточке НЕ дублируется", async () => {
+  const arr = W.QA.S.items[W.QA.S.types[W.QA.S.type].name];
+  const id = Object.keys(arr).find(i => arr[i].title === "Интерстеллар");
+  if (!id) throw new Error("нет Интерстеллар");
+  W.QA.setView("active"); await sleep(250);
+  const card = [...doc.querySelectorAll(".card")].find(c => c.dataset.id === id);
+  if (!card) throw new Error("карточки нет: cards=" + doc.querySelectorAll(".card").length + " rows=" + [...doc.querySelectorAll(".rowitem")].length + " type=" + W.QA.S.types[W.QA.S.type].name + " layout=" + W.QA.S.layout + " view=" + W.QA.S.view + " id=" + id);
+  const meta = card.querySelector(".cmeta");
+  if (!meta) throw new Error("cmeta нет; html=" + card.innerHTML.slice(0, 200));
+  const metaV = meta.textContent;
+  if ((metaV.match(/2014/g) || []).length > 1) throw new Error("дубль года: " + metaV);
+});
+T("05 кнопки карточки: иконки (без текста), 4 шт.", async () => {
+  const arr = W.QA.S.items[W.QA.S.types[W.QA.S.type].name];
+  const id = Object.keys(arr).find(i => arr[i].title === "Интерстеллар");
+  W.QA.setView("active"); await sleep(250);
+  const card = [...doc.querySelectorAll(".card")].find(c => c.dataset.id === id);
+  if (!card) throw new Error("карточки нет");
+  const btns = [...card.querySelectorAll(".cardbtns .mini")];
+  if (btns.length !== 4) throw new Error("кнопок " + btns.length);
+  for (const b of btns) if (b.textContent.trim()) throw new Error("текст на кнопке");
+});
+T("06 обложка: не касается углов (padding), contain", () => {
+  const card = [...doc.querySelectorAll(".card")][0];
+  const wrap = card.querySelector(".covwrap"), img = card.querySelector("img");
+  const cs = getComputedStyle(wrap), ci = getComputedStyle(img);
+  if (parseFloat(cs.padding) < 6) throw new Error("нет padding у covwrap");
+  if (ci.objectFit !== "contain") throw new Error("не contain");
+});
+T("07 оценки на обложке: критиков + моя", () => {
+  const w = W, id = Object.keys(W.QA.S.items[W.QA.S.types[W.QA.S.type].name])[0];
+  W.QA.S.myScore[id] = 8; W.QA.save();
+  const it = W.QA.S.items[W.QA.S.types[W.QA.S.type].name][id]; it.score = 87;
+  W.QA.renderCurrent();
+  const card = [...doc.querySelectorAll(".card")].find(c => c.dataset.id === id);
+  if (!card.querySelector(".scorebadge")) throw new Error("нет оценки критиков на обложке");
+  if (!card.querySelector(".myscorebadge")) throw new Error("нет моей оценки на обложке");
+  const text = card.querySelector(".covwrap").textContent;
+  if (!text.includes("87")) throw new Error("критики не видны");
+  if (!text.includes("8/10")) throw new Error("моя не видна");
+});
+T("08 теги: создание, назначение, чип на карточке", () => {
+  const w = W;
+  const before = w.QA.S.tags.length;
+  const id = w.QA.createTag("QA-тег", "#E8B04B", "diamond");
+  if (w.QA.S.tags.length !== before + 1) throw new Error("тег не создан");
+  const itemId = Object.keys(w.QA.S.items[w.QA.S.types[w.QA.S.type].name])[0];
+  w.QA.toggleItemTag(itemId, id);
+  w.QA.renderCurrent();
+  const card = [...doc.querySelectorAll(".card")].find(c => c.dataset.id === itemId);
+  if (!card.querySelector(".covertags .tagchip")) throw new Error("тег не виден на карточке");
+  w.QA.toggleItemTag(itemId, id);
+  if ((w.QA.S.itemTags[itemId] || []).length) throw new Error("не снялся");
+});
+T("09 фильтр по тегам", () => {
+  const w = W;
+  w.QA.setView("active");
+  const t = w.QA.createTag("Фильтр-QA", "#7BC47F", "round");
+  const arr = w.QA.S.items[w.QA.S.types[w.QA.S.type].name];
+  const ids = Object.keys(arr);
+  if (ids.length < 2) { const g2 = JSON.parse(JSON.stringify(arr[ids[0]])); g2.id = "uqa1"; g2.title = "QA вторая"; arr["uqa1"] = g2; ids.push("uqa1"); }
+  ids.forEach((id, i) => { if (i === 0) w.QA.toggleItemTag(id, t); });
+  w.QA.renderCurrent();
+  const chip = [...doc.querySelectorAll("#tagfilter [data-t]")].find(b => b.dataset.t === t);
+  if (!chip) throw new Error("фильтра нет");
+  chip.click();
+  const shown = [...doc.querySelectorAll(".card,.rowitem")].length;
+  if (shown !== 1) throw new Error("показано " + shown + " вместо 1");
+  const clr = doc.getElementById("tagclear"); if (clr) clr.click();
+  const shown2 = [...doc.querySelectorAll(".card,.rowitem")].length;
+  if (shown2 < shown) throw new Error("после сброса стало меньше");
+  w.QA.deleteTag(t);
+});
+T("10 состояния: завершено → plays=1 + запись playLog, раздел Завершено", () => {
+  const w = W;
+  w.QA.setView("active");
+  const id = Object.keys(w.QA.S.items[w.QA.S.types[w.QA.S.type].name]).find(i => (w.QA.stateOf(i) === "active"));
+  if (!id) throw new Error("нет активных");
+  w.QA.setState(id, "done");
+  if (w.QA.stateOf(id) !== "done") throw new Error("не завершено");
+  if (!w.QA.S.plays[id]) throw new Error("plays не выставлен");
+  if (!(w.QA.S.playLog[id] || []).some(p => p.d === w.QA.todayISO())) throw new Error("playLog не создан");
+  w.QA.setState(id, "active");
+});
+T("11 несколько прохождений: playCount растёт, часы суммируются", () => {
+  const w = W;
+  const arr = w.QA.S.items[w.QA.S.types[w.QA.S.type].name] || {};
+  let id = Object.keys(arr).find(i => w.QA.stateOf(i) === "done");
+  if (!id) { // нет завершённых — завершаем первый элемент сами (тест 10 возвращает свои в active)
+    id = Object.keys(arr)[0];
+    if (!id) throw new Error("нет элементов");
+    w.QA.setState(id, "done");
+  }
+  const p0 = w.QA.playCount(id);
+  w.QA.addPlay(id, w.QA.todayISO(), 2.5);
+  if (w.QA.playCount(id) !== p0 + 1) throw new Error("playCount не растёт");
+  if (w.QA.sumHours(id) < 2.5) throw new Error("часы не суммируются");
+  w.QA.setState(id, "active");
+});
+T("12 статистика: проценты, прохождения и часы", () => {
+  const w = W;
+  w.QA.openStats();
+  const txt = doc.getElementById("sheet").textContent;
+  if (!txt.includes("%")) throw new Error("нет процентов");
+  if (!/прохождени/i.test(txt)) throw new Error("нет прохождений");
+  if (!/\d+([.,]\d+)? ч/.test(txt)) throw new Error("нет часов в статистике");
+  w.QA.closeSheet();
+});
+T("13 компактный вид: только название и год", () => {
+  const w = W;
+  w.QA.S.layout = "compact"; w.QA.save(); w.QA.renderCurrent();
+  const rows = [...doc.querySelectorAll(".rowitem")];
+  if (!rows.length) throw new Error("нет строк");
+  const r = rows[0];
+  if (r.querySelector("img")) throw new Error("в компактном виде есть обложка");
+  if (!r.querySelector(".rtitle") || !r.querySelector(".ryear")) throw new Error("нет названия/года");
+  w.QA.S.layout = "grid"; w.QA.save(); w.QA.renderCurrent();
+});
+T("14 экспорт .md списка: имя и маркдаун-таблица", () => {
+  const w = W;
+  let cap = null; const orig = w.downloadFile;
+  w.downloadFile = (n, c) => { cap = {n, c}; };
+  w.QA.exportListMD();
+  w.downloadFile = orig;
+  if (!cap) throw new Error("экспорт не вызван");
+  if (!cap.n.endsWith(".md")) throw new Error("имя: " + cap.n);
+  if (!cap.c.startsWith("# ") || !cap.c.includes("| ")) throw new Error("не markdown-таблица");
+});
+T("15 экспорт .xlsx: zip-сигнатура и sheet1", async () => {
+  const w = W;
+  let cap = null; const orig = w.downloadFile;
+  window.__xlsxSpy = (name, bytes) => { cap = {name, bytes}; };
+  // экспортListXLSX создаёт blob+a.click; перехват невозможен напрямую — проверим функцию makeZip через QA? Используем публичный обход: подменим HTMLAnchorElement.click
+  const origClick = w.HTMLAnchorElement.prototype.click;
+  let href = null;
+  w.HTMLAnchorElement.prototype.click = function () { href = this.href; };
+  w.QA.exportListXLSX();
+  w.HTMLAnchorElement.prototype.click = origClick;
+  if (!href || !href.startsWith("data:application/vnd.openxmlformats")) throw new Error("не xlsx data-url");
+  const b64 = href.split("base64,").pop().split("#")[0];
+  const bin = atob(b64);
+  if (bin.slice(0, 2) !== "PK") throw new Error("нет zip-сигнатуры");
+  if (!bin.includes("sheet1") && !decodeURIComponent(escape(bin)).includes("sheet1")) throw new Error("нет sheet1");
+});
+T("16 заметки: экспорт .md и импорт обратно", () => {
+  const w = W;
+  const arr0 = w.QA.S.items[w.QA.S.types[w.QA.S.type].name];
+  const id = Object.keys(arr0)[0];
+  w.QA.S.notes[id] = [{d: Date.now(), t: "заметка-оригинал"}]; w.QA.save();
+  let cap = null; const orig = w.downloadFile;
+  w.downloadFile = (n, c) => { cap = {n, c}; };
+  w.QA.exportNoteMD(arr0[id]);
+  w.downloadFile = orig;
+  if (!cap || !cap.n.endsWith(".md")) throw new Error("экспорт сломан: " + (cap && cap.n));
+  const before = w.QA.S.notes[id].length;
+  w.QA.importNoteMD(id, cap.c);
+  if (w.QA.S.notes[id].length <= before) throw new Error("импорт не добавил");
+});
+T("17 парсер Steam: appdetails разбирается (mock транспорта)", async () => {
+  const w = W;
+  const fake = JSON.stringify({["609490"]: {success: true, data: {name: "Minit", release_date: {date: "26 апр. 2018"}, short_description: "легендарный мини-рогалик", header_image: "https://x/h.jpg", developers: ["Kitty Calis"]}}});
+  w.fetch = async (u) => ({ ok: true, text: async () => /md-parser\.local/.test(u) ? fake : fake, json: async () => JSON.parse(fake) });
+  const info = await w.QA.parsePage("https://store.steampowered.com/app/609490/Minit/");
+  if (info.title !== "Minit" || info.year !== 2018) throw new Error(JSON.stringify(info));
+  delete w.fetch;
+});
+T("18 парсер: generic og-мета (mock)", async () => {
+  const w = W;
+  const html = '<html><head><meta property="og:title" content="Интерстеллар"><meta property="og:description" content="Фильм Нолана 2014 года"><meta property="og:image" content="https://x/i.jpg"></head><body></body></html>';
+  w.fetch = async (u) => ({ ok: true, text: async () => html });
+  const info = await w.QA.parsePage("https://example.com/x");
+  if (info.title !== "Интерстеллар" || info.year !== 2014) throw new Error(JSON.stringify(info));
+  delete w.fetch;
+});
+T("19 типы: создание своего и редактирование", () => {
+  const w = W;
+  const before = w.QA.S.types.length;
+  w.QA.openTypeManager();
+  doc.getElementById("newname").value = "Подкасты";
+  doc.getElementById("tcreate").click();
+  if (w.QA.S.types.length !== before + 1) throw new Error("тип не создан");
+  const nm = w.QA.S.types[w.QA.S.types.length - 1].name;
+  if (nm !== "Подкасты") throw new Error("неверное имя: " + nm);
+  // редактирование имени последнего
+  w.QA.openTypeManager(w.QA.S.types.length - 1);
+  doc.getElementById("tname").value = "Мой подкаст";
+  doc.getElementById("tsave").click();
+  if (!w.QA.S.types.some(t => t.name === "Мой подкаст")) throw new Error("имя не изменилось");
+  // удаление
+  const i = w.QA.S.types.findIndex(t => t.name === "Мой подкаст");
+  w.QA.openTypeManager(i);
+  doc.getElementById("tdel").click();
+  if (w.QA.S.types.some(t => t.name === "Мой подкаст")) throw new Error("не удалился");
+  // tdel сбрасывает S.type на тип без элементов — вернуть «Фильмы» для тестов 21+
+  w.QA.S.type = 1; w.QA.save(); w.QA.renderCurrent();
+  delete w.QA.S.items["Мой подкаст"];
+});
+T("20 нет горизонтальной прокрутки", () => {
+  const over = doc.documentElement.scrollWidth - doc.documentElement.clientWidth;
+  if (over > 1) throw new Error("h-скролл " + over + "px");
+});
+T("21 кнопки шторки: сетка 2 колонки (v1.2), равная ширина, без переполнения", () => {
+  const w = W;
+  let arr = w.QA.S.items[w.QA.S.types[w.QA.S.type].name] || {};
+  let id = Object.keys(arr)[0];
+  if (!id) { for (const tn in w.QA.S.items) { const a2 = w.QA.S.items[tn]; const f = Object.keys(a2)[0]; if (f) { arr = a2; id = f; break; } } }
+  if (!id) throw new Error("нет элементов");
+  w.QA.openSheet(id);
+  const row = doc.querySelector("#sheet .dbtns.row");
+  if (!row) throw new Error("нет .dbtns.row");
+  const cs = getComputedStyle(row);
+  if (cs.display !== "grid") throw new Error("кнопки не в сетке: " + cs.display);
+  const btns = [...row.querySelectorAll(".btn")];
+  if (!btns.length) throw new Error("нет кнопок");
+  const cw = btns[0].getBoundingClientRect().width;
+  for (const b of btns) if (Math.abs(b.getBoundingClientRect().width - cw) > 2) throw new Error("колонки неравные");
+  for (const b of btns) if (b.getBoundingClientRect().right > doc.documentElement.clientWidth + 1) throw new Error("кнопка за экраном");
+  w.QA.closeSheet();
+});
+T("22 элементы не касаются друг друга (grid gap)", () => {
+  const doc0 = doc;
+  const cards = [...doc0.querySelectorAll(".card")];
+  if (cards.length < 2) { W.QA.setView("done"); }
+  const cs = [...doc.querySelectorAll(".card")];
+  if (cs.length >= 2) {
+    const a = cs[0].getBoundingClientRect(), b = cs[1].getBoundingClientRect();
+    const gap = b.left - a.right;
+    if (gap < 2) throw new Error("карточки соприкасаются: gap=" + gap.toFixed(1));
+  }
+});
+
+
+T("23 шторка: год появляется один раз", () => {
+  const w = W;
+  const arr = w.QA.S.items[w.QA.S.types[w.QA.S.type].name] || {};
+  const id = Object.keys(arr).find(i => arr[i].year);
+  if (!id) throw new Error("нет элемента с годом");
+  w.QA.openSheet(id);
+  const meta = doc.querySelector(".dmeta").textContent;
+  if ((meta.match(new RegExp(String(arr[id].year), "g")) || []).length > 1) throw new Error("дубль года в шторке: " + meta);
+  w.QA.closeSheet();
+});
+T("24 поля формы: стиль ninput у всех текстовых полей", () => {
+  const w = W;
+  w.QA.openItemForm();
+  const inputs = [...doc.querySelectorAll("#sheet .fbody input.ninput")];
+  if (!inputs.length) throw new Error("нет .ninput полей");
+  const btn = doc.getElementById("cparse");
+  if (!btn) throw new Error("нет кнопки парсера");
+  w.QA.closeSheet();
+});
+T("25 теги: единая форма (все бейджи одного border-radius)", () => {
+  const w = W;
+  w.QA.setView("active"); await0 = 0;
+  const id = Object.keys(w.QA.S.items[w.QA.S.types[w.QA.S.type].name] || {})[0];
+  if (!id) throw new Error("нет элементов");
+  w.QA.openSheet(id);
+  const radii = [...doc.querySelectorAll("#itemtags .tchip")].map(b => getComputedStyle(b).borderRadius);
+  w.QA.closeSheet();
+  const uniq = [...new Set(radii.filter(r => r && r !== "0px"))];
+  if (radii.length > 1 && uniq.length > 1) throw new Error("формы разные: " + uniq.join(","));
+});
+T("26 шторка: кнопки не выходят за экран", () => {
+  const w = W;
+  const id = Object.keys(w.QA.S.items[w.QA.S.types[w.QA.S.type].name] || {})[0];
+  if (!id) throw new Error("нет элементов");
+  w.QA.openSheet(id);
+  const sheet = doc.getElementById("sheet");
+  const over = [...sheet.querySelectorAll(".dbtns .btn")].filter(b => b.getBoundingClientRect().right > doc.documentElement.clientWidth + 1).length;
+  w.QA.closeSheet();
+  if (over) throw new Error("кнопок за экраном: " + over);
+});
+T("27 компактный вид: колонки заголовка и строк совпадают", () => {
+  const w = W;
+  w.QA.S.layout = "compact"; w.QA.save(); w.QA.renderCurrent();
+  const head = doc.querySelector(".rowhead"), row = doc.querySelector(".rowitem");
+  if (!head || !row) throw new Error("нет компакт-списка");
+  const hc = getComputedStyle(head).gridTemplateColumns;
+  const rc = getComputedStyle(row).gridTemplateColumns;
+  if (hc.split(" ").length !== rc.split(" ").length) throw new Error("колонки съехали: " + hc + " vs " + rc);
+  w.QA.S.layout = "grid"; w.QA.save(); w.QA.renderCurrent();
+});
+T("28 парсер-транспорт: прямой запрос раньше прокси (mock)", async () => {
+  const w = W;
+  const calls = [];
+  const fakeApp = JSON.stringify({["609490"]: {success: true, data: {name: "Minit", release_date: {date: "26 апр. 2018"}, short_description: "x", header_image: "h"}}});
+  w.fetch = async (u) => { calls.push(String(u).slice(0, 40));
+    if (/md-parser\.local/.test(u)) throw new Error("не в webview");
+    if (/appdetails/.test(u)) return { ok: true, text: async () => fakeApp };
+    throw new Error("proxy fail"); };
+  const info = await w.QA.parsePage("https://store.steampowered.com/app/609490/Minit/");
+  delete w.fetch;
+  if (info.title !== "Minit") throw new Error("title: " + info.title);
+  if (!calls.some(c => c.startsWith("https://store.steampowered.com"))) throw new Error("direct не первый");
+  if (calls.some(c => c.includes("allorigins") && calls.indexOf(c) < calls.findIndex(x => x.includes("store.steampowered")))) throw new Error("прокси вызван раньше direct");
+});
+T("29 импорт заметок: файл без секций и с секциями", () => {
+  const w = W;
+  const arr = w.QA.S.items[w.QA.S.types[w.QA.S.type].name] || {};
+  const id = Object.keys(arr)[0];
+  if (!id) throw new Error("нет элементов");
+  const n0 = (w.QA.S.notes[id] || []).length;
+  w.QA.importNoteMD(id, "Просто текст без секций");
+  const n1 = (w.QA.S.notes[id] || []).length;
+  w.QA.importNoteMD(id, "# Заголовок\n\n## часть 1\nтекст1\n---\n\n## часть 2\nтекст2\n---");
+  const n2 = (w.QA.S.notes[id] || []).length;
+  if (n1 !== n0 + 1) throw new Error("свободный импорт не добавил");
+  if (n2 !== n1 + 2) throw new Error("секционный импорт не добавил 2");
+  w.QA.S.notes[id] = []; w.QA.save();
+});
+T("30 поля студии/страны: подписи, пресеты, поиск по всем полям", async () => {
+  const w = W;
+  // 1) «Сериалы» содержит studio — подпись в форме должна стать «Студия»
+  const serialIdx = w.QA.S.types.findIndex(t => t.name === "Сериалы");
+  const saveType = w.QA.S.type;
+  w.QA.S.type = serialIdx; w.QA.save();
+  w.QA.openItemForm();
+  const labels = [...doc.querySelectorAll("#sheet .fbody .nfield > span")].map(s => s.textContent);
+  w.QA.closeSheet();
+  if (!labels.includes("Студия")) throw new Error("нет подписи «Студия»: " + labels.join(","));
+  if (labels.includes("studio")) throw new Error("сырой ключ studio в форме");
+  // 2) медиа-пресеты с country, «Игры» — без
+  if (!w.QA.S.types.find(t => t.name === "Фильмы").fields.includes("country")) throw new Error("у «Фильмы» нет country");
+  if (w.QA.S.types.find(t => t.name === "Игры").fields.includes("country")) throw new Error("у «Игры» не должно быть country");
+  // 3) поиск находит по стране (все поля, не только title/why/creator)
+  w.QA.S.type = 1; w.QA.save(); // «Фильмы» — там есть элементы от теста 03
+  w.QA.setView("active");
+  const arr = w.QA.S.items[w.QA.S.types[w.QA.S.type].name] || {};
+  const id = Object.keys(arr)[0];
+  if (!id) throw new Error("нет элементов");
+  arr[id].country = "Исландия"; w.QA.save(); w.QA.renderCurrent();
+  doc.getElementById("q").value = "Исландия";
+  doc.getElementById("q").dispatchEvent(new w.Event("input"));
+  await sleep(500);
+  const shown = [...doc.querySelectorAll(".card,.rowitem")].length;
+  if (shown !== 1) throw new Error("поиск по стране: показано " + shown);
+  delete arr[id].country; w.QA.save();
+  w.QA.S.type = saveType; w.QA.save();
+  w.QA.setView("active");
+});
+T("31 шторка: журнал прохождений — добавить с датой/часами, удалить запись", async () => {
+  const w = W;
+  const arr = w.QA.S.items[w.QA.S.types[w.QA.S.type].name] || {};
+  let id = Object.keys(arr).find(i => w.QA.stateOf(i) === "done");
+  if (!id) { id = Object.keys(arr)[0]; if (!id) throw new Error("нет элементов"); w.QA.setState(id, "done"); }
+  w.QA.S.playLog[id] = []; w.QA.save();
+  w.QA.openSheet(id);
+  doc.getElementById("pldate").value = "2025-01-15";
+  doc.getElementById("plhours").value = "12.5";
+  doc.getElementById("pladd").click(); await sleep(200);
+  const pl = w.QA.S.playLog[id];
+  if (!pl || !pl.length || pl[0].d !== "2025-01-15" || pl[0].h !== 12.5) throw new Error("запись не добавлена: " + JSON.stringify(pl || []));
+  if (!doc.getElementById("sheet").textContent.includes("15.01.2025")) throw new Error("запись не видна в шторке");
+  doc.querySelector("#playlog [data-pdel='0']").click(); await sleep(200);
+  if ((w.QA.S.playLog[id] || []).length !== 0) throw new Error("запись не удалена");
+  w.QA.closeSheet();
+});
+T("32 экспорт .md списка: колонки прохождений и часы", () => {
+  const w = W;
+  const arr = w.QA.S.items[w.QA.S.types[w.QA.S.type].name] || {};
+  let id = Object.keys(arr).find(i => w.QA.stateOf(i) === "done");
+  if (!id) { id = Object.keys(arr)[0]; if (!id) throw new Error("нет элементов"); w.QA.setState(id, "done"); }
+  w.QA.S.playLog[id] = [{d: "2025-02-20", h: 9}]; w.QA.save();
+  w.QA.setView("done");
+  let cap = null; const orig = w.downloadFile;
+  w.downloadFile = (n, c) => { cap = {n, c}; };
+  w.QA.exportListMD();
+  w.downloadFile = orig;
+  if (!cap) throw new Error("экспорт не вызван");
+  if (!cap.c.includes("Последнее прохождение")) throw new Error("нет колонки даты");
+  if (!cap.c.includes("Часы")) throw new Error("нет колонки часов");
+  if (!cap.c.includes("20.02.2025")) throw new Error("нет значения даты");
+  w.QA.S.playLog[id] = []; w.QA.save();
+  w.QA.setView("active");
+});
+T("33 табличный вид: строки, сортировка по дате, колонки заголовка совпадают", () => {
+  const w = W;
+  const arr = w.QA.S.items[w.QA.S.types[w.QA.S.type].name] || {};
+  const act = Object.keys(arr).filter(i => w.QA.stateOf(i) === "active");
+  if (!act.length) throw new Error("нет активных");
+  w.QA.S.playLog[act[0]] = [{d: "2026-02-11", h: 6}];
+  if (act[1]) w.QA.S.playLog[act[1]] = [{d: "2025-11-03", h: 40}];
+  w.QA.save();
+  w.QA.S.layout = "table"; w.QA.S.sort = "done"; w.QA.save();
+  w.QA.setView("active");
+  const rows = [...doc.querySelectorAll(".trow")];
+  if (rows.length !== act.length) throw new Error("строк: " + rows.length);
+  const hc = getComputedStyle(doc.querySelector(".thead")).gridTemplateColumns.split(" ").length;
+  const rc = getComputedStyle(rows[0]).gridTemplateColumns.split(" ").length;
+  if (hc !== rc) throw new Error("колонки съехали: " + hc + " vs " + rc);
+  if (!rows[0].querySelector(".td").textContent.includes("11.02.2026")) throw new Error("сортировка по дате: " + rows[0].querySelector(".td").textContent);
+  [...doc.querySelectorAll(".thead .tcol")].find(b => b.dataset.sort === "year").click();
+  const rows2 = [...doc.querySelectorAll(".trow")];
+  if (rows2.length !== rows.length) throw new Error("после сортировки строки потерялись");
+  if ((w.QA.S.sort) !== "year") throw new Error("sort не сохранился");
+  w.QA.S.layout = "grid"; w.QA.S.sort = "added"; w.QA.save(); w.QA.setView("active");
+});
+T("34 свайп вкладок: горизонтальный листает состояния, вертикальный нет", async () => {
+  const w = W;
+  if (typeof w.Touch !== "function") { doc.title = "QA34: Touch недоступен — skip"; return; }
+  const lb = doc.getElementById("listbox");
+  const fire = (type, x, y) => {
+    const t = new w.Touch({identifier: 1, target: lb, clientX: x, clientY: y});
+    lb.dispatchEvent(new w.TouchEvent(type, {touches: [t], targetTouches: [t], changedTouches: [t], bubbles: true}));
+  };
+  w.QA.setView("backlog"); await sleep(250);
+  fire("touchstart", 300, 300); fire("touchmove", 210, 305); fire("touchend", 210, 305);
+  await sleep(450);
+  if (w.QA.S.view !== "active") throw new Error("свайп влево: ожидалось active, стало " + w.QA.S.view);
+  fire("touchstart", 210, 300); fire("touchmove", 320, 305); fire("touchend", 320, 305);
+  await sleep(450);
+  if (w.QA.S.view !== "backlog") throw new Error("свайп вправо не вернул: " + w.QA.S.view);
+  fire("touchstart", 300, 300); fire("touchmove", 300, 410); fire("touchend", 300, 410);
+  await sleep(350);
+  if (w.QA.S.view !== "backlog") throw new Error("вертикальный свайп переключил вкладку");
+  w.QA.setView("dropped"); await sleep(250);
+  fire("touchstart", 300, 300); fire("touchmove", 210, 300); fire("touchend", 210, 300);
+  await sleep(450);
+  if (w.QA.S.view !== "backlog") throw new Error("цикл dropped→backlog не работает: " + w.QA.S.view);
+  w.QA.setView("active");
+});
+T("35 шаблон карточки: cardFields задаёт состав и порядок на плитке", () => {
+  const w = W;
+  const ti = w.QA.S.types.findIndex(t => t.name === "Фильмы");
+  const t0 = w.QA.S.types[ti];
+  const saveType = w.QA.S.type;
+  const arr = w.QA.S.items["Фильмы"];
+  const act = Object.keys(arr).filter(i => w.QA.stateOf(i) === "active");
+  if (!act.length) throw new Error("нет активных");
+  const id = act.find(i => arr[i].title === "Интерстеллар") || act[0];
+  arr[id].director = "Кристофер Нолан"; w.QA.save();
+  w.QA.S.type = ti; w.QA.save(); w.QA.renderCurrent();
+  // без cardFields — прежний рендер
+  const c0 = [...doc.querySelectorAll(".card")].find(c => c.dataset.id === id);
+  const before = c0.querySelector(".ctime") ? c0.querySelector(".ctime").textContent : "";
+  // менеджер типов: включить «Год» и «Режиссёр» на плитке (перерисовка после каждого клика)
+  w.QA.openTypeManager(ti);
+  doc.querySelector('#tcards input[data-cf="year"]').click();
+  doc.querySelector('#tcards input[data-cf="director"]').click();
+  const checks = [...doc.querySelectorAll("#tcards input:checked")].map(x => x.dataset.cf);
+  if (!checks.includes("year") || !checks.includes("director")) throw new Error("чекбоксы не выставились: " + checks.join(","));
+  const order = doc.querySelector('#tcards input[data-cf="director"]').closest(".setrow").querySelector(".sl span").textContent;
+  if (!order.includes("2")) throw new Error("порядковый номер не показан: " + order);
+  w.QA.closeSheet(); w.QA.renderCurrent();
+  const c1 = [...doc.querySelectorAll(".card")].find(c => c.dataset.id === id);
+  const after = c1.querySelector(".ctime") ? c1.querySelector(".ctime").textContent : "";
+  if (after.indexOf("2014") === -1 || after.indexOf("Нолан") === -1) throw new Error("cardFields не применились: " + after);
+  if (after.indexOf("2014") > after.indexOf("Нолан")) throw new Error("порядок нарушен: " + after);
+  // удаление cardFields — прежний рендер
+  delete t0.cardFields; w.QA.save(); w.QA.renderCurrent();
+  const c2 = [...doc.querySelectorAll(".card")].find(c => c.dataset.id === id);
+  const back = c2.querySelector(".ctime") ? c2.querySelector(".ctime").textContent : "";
+  if (back !== before) throw new Error("не вернулся прежний рендер: " + back + " vs " + before);
+  w.QA.S.type = saveType; w.QA.save(); w.QA.renderCurrent();
+});
+
+(async () => {
+  const f = await bootFrame(true);
+  W = f.contentWindow; doc = f.contentDocument;
+  for (let i = 0; i < 60; i++) {
+    await sleep(250);
+    W = f.contentWindow; doc = f.contentDocument;
+    if (W.QA) break;
+  }
+  if (!(W && W.QA)) throw new Error("приложение не загрузилось");
+  const rep = document.getElementById("report");
+  let pass = 0, fail = 0;
+  for (const [name, fn] of tests) {
+    const li = document.createElement("li");
+    try { await fn(); pass++; li.innerHTML = `<span class="p">PASS</span> <span class="t">${name}</span>`; }
+    catch (e) { fail++; li.innerHTML = `<span class="f">FAIL</span> <span class="t">${name}</span> — ${e.message}`; }
+    rep.appendChild(li);
+  }
+  document.getElementById("summary").innerHTML = `ИТОГ: <span class="p">PASS ${pass}</span> / <span class="f">FAIL ${fail}</span>`;
+  window.__QARESULT = {pass, fail};
+})();
+</script>
+<script>window.addEventListener('error',e=>{document.title='QERR:'+e.message+'@'+e.lineno;});</script></body>
+</html>

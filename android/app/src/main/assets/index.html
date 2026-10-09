@@ -1,0 +1,1609 @@
+<!DOCTYPE html>
+<html lang="ru" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#121318">
+<title>Медиа дневник</title>
+<style>
+/* Игровой дневник v4 — Material 3 Expressive. Без горизонтальной прокрутки. */
+*,*::before,*::after{box-sizing:border-box}
+:root{
+  --md-primary:#C9C1FF; --md-on-primary:#2A2160;
+  --md-primary-container:#413878; --md-on-primary-container:#E5DEFF;
+  --md-secondary:#CBC2DB; --md-secondary-container:#474056;
+  --md-tertiary:#EFB8C8; --md-tertiary-container:#663349;
+  --md-error:#FFB4AB; --md-error-container:#93000A; --md-on-error-container:#FFDAD6;
+  --md-surface:#121318; --md-surface-bright:#3A3940;
+  --sc-1:#1A1B21; --sc-2:#1F2027; --sc-3:#292A32; --sc-4:#2F3038;
+  --on-surface:#E4E1E9; --on-surface-var:#C7C5D0;
+  --outline:#8C8998; --outline-var:#47464F;
+  --done:#9CD67D; --done-container:#2C4222; --on-done-container:#D3F8BC;
+  --sh-card:0 1px 3px rgba(0,0,0,.4);
+  --ease-emph:cubic-bezier(.2,0,0,1); --ease-spring:cubic-bezier(.34,1.56,.64,1);
+  --dur-1:120ms; --dur-2:220ms; --dur-3:340ms;
+  color-scheme:dark;
+}
+html[data-theme="light"]{
+  --md-primary:#5856A8; --md-on-primary:#FFF;
+  --md-primary-container:#E5DEFF; --md-on-primary-container:#140B45;
+  --md-secondary:#615C71; --md-secondary-container:#E7DFF8;
+  --md-tertiary:#924561; --md-tertiary-container:#FFD9E4;
+  --md-error:#B3261E; --md-error-container:#F9DEDC; --md-on-error-container:#410E0B;
+  --md-surface:#FCF8FF; --md-surface-bright:#FFF;
+  --sc-1:#F4EFFA; --sc-2:#EEE9F4; --sc-3:#E6E1EC; --sc-4:#DFDAE6;
+  --on-surface:#1B1B21; --on-surface-var:#47464F;
+  --outline:#77767F; --outline-var:#C8C5D0;
+  --done:#3E6B1F; --done-container:#C9EDA6; --on-done-container:#1C3703;
+  color-scheme:light;
+}
+html,body{margin:0;padding:0}
+body{
+  background:var(--md-surface); color:var(--on-surface);
+  font:15px/1.5 "Segoe UI",Roboto,system-ui,-apple-system,sans-serif;
+  -webkit-tap-highlight-color:transparent;
+  overflow-x:hidden; max-width:100vw;
+}
+button,input,select,textarea{font:inherit;color:inherit}
+img{max-width:100%}
+::-webkit-scrollbar{width:10px}
+::-webkit-scrollbar-thumb{background:var(--sc-3);border-radius:8px}
+
+/* ── Верхняя панель ─────────────────────────────── */
+.topbar{
+  position:sticky;top:0;z-index:40;display:flex;align-items:center;gap:8px;flex-wrap:wrap;
+  padding:10px 14px;background:color-mix(in srgb,var(--md-surface) 86%,transparent);
+  backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+  border-bottom:1px solid var(--outline-var);
+}
+.topbar h1{font-size:20px;font-weight:700;margin:0;letter-spacing:.2px;white-space:nowrap}
+.topbar h1 b{color:var(--md-primary)}
+.topbar .spacer{flex:1}
+.iconbtn{
+  width:44px;height:44px;border-radius:999px;border:none;cursor:pointer;flex:none;
+  background:transparent;display:inline-flex;align-items:center;justify-content:center;
+  transition:background var(--dur-1) var(--ease-emph),transform var(--dur-1) var(--ease-spring);
+}
+.iconbtn:hover{background:var(--sc-2)} .iconbtn:active{transform:scale(.9)}
+.iconbtn svg{width:22px;height:22px;fill:var(--on-surface-var)}
+.searchbox.wide{flex:1 1 100%;max-width:none;order:10;margin-top:2px}
+.searchbox{
+  flex:1;min-width:60px;max-width:430px;display:flex;align-items:center;gap:8px;
+  background:var(--sc-2);border-radius:999px;padding:0 16px;height:44px;
+  border:1px solid transparent;transition:border-color var(--dur-2);
+}
+.searchbox:focus-within{border-color:var(--md-primary)}
+.searchbox svg{width:19px;height:19px;fill:var(--on-surface-var);flex:none}
+.searchbox input{flex:1;background:none;border:none;outline:none;min-width:0}
+.searchbox input::placeholder{color:var(--on-surface-var)}
+
+/* ── Чипы разделов (перенос строк) ──────────────── */
+.navchips{
+  display:flex;flex-wrap:wrap;gap:8px;padding:10px 14px 4px;
+}
+.stickybars{
+  position:sticky;top:63px;z-index:30;
+  background:color-mix(in srgb,var(--md-surface) 94%,transparent);
+  backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+  border-bottom:1px solid var(--outline-var);
+}
+.chip{
+  border:1px solid var(--outline-var);background:var(--sc-1);color:var(--on-surface-var);
+  border-radius:12px;padding:7px 14px;cursor:pointer;font-weight:600;font-size:13.5px;
+  display:inline-flex;align-items:center;gap:6px;
+  transition:all var(--dur-2) var(--ease-spring);
+}
+.chip:hover{background:var(--sc-3)}
+.chip[aria-pressed="true"]{
+  background:var(--md-secondary-container);color:var(--on-surface);
+  border-color:transparent;transform:translateY(-1px);
+  box-shadow:0 2px 8px rgba(0,0,0,.25);
+}
+.chip .n{font-size:11.5px;opacity:.75;font-weight:500}
+
+/* ── Контент ────────────────────────────────────── */
+main{padding:10px 14px 90px;max-width:1180px;margin:0 auto}
+.viewhead{margin:6px 0 12px}
+.viewhead h2{margin:0;font-size:24px;font-weight:800;letter-spacing:.2px}
+.viewhead p{margin:4px 0 0;color:var(--on-surface-var);font-size:13.5px}
+.headrow{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:0 0 12px}
+.headrow .grow{flex:1;min-width:120px}
+
+/* режим списка */
+.modeseg{display:inline-flex;background:var(--sc-2);border-radius:999px;padding:3px;gap:2px}
+.modeseg button{
+  border:none;background:transparent;border-radius:999px;padding:6px 13px;cursor:pointer;
+  color:var(--on-surface-var);font-weight:600;font-size:13px;
+  transition:all var(--dur-2) var(--ease-spring);
+}
+.modeseg button[aria-pressed="true"]{background:var(--md-primary-container);color:var(--on-primary-container)}
+select.m3{
+  appearance:none;-webkit-appearance:none;background:var(--sc-2) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23C7C5D0'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E") no-repeat right 10px center/18px;
+  border:1px solid var(--outline-var);border-radius:12px;padding:8px 36px 8px 13px;
+  cursor:pointer;font-size:13.5px;font-weight:600;max-width:100%;
+}
+html[data-theme="light"] select.m3{background-color:var(--sc-2)}
+select.m3:focus{outline:2px solid var(--md-primary);outline-offset:1px}
+
+/* ── Панель фильтров (аккордеон) ────────────────── */
+details.filters{
+  background:var(--sc-1);border:1px solid var(--outline-var);border-radius:20px;
+  margin:0 0 14px;overflow:hidden;
+}
+details.filters>summary{
+  list-style:none;cursor:pointer;padding:13px 18px;font-weight:700;font-size:14px;
+  display:flex;align-items:center;gap:10px;
+}
+details.filters>summary::-webkit-details-marker{display:none}
+details.filters>summary .cnt{
+  background:var(--md-primary-container);color:var(--on-primary-container);
+  border-radius:999px;font-size:11.5px;padding:2px 9px;font-weight:700;
+}
+details.filters>summary svg{width:18px;height:18px;fill:var(--md-primary);flex:none}
+details.filters[open]>summary{border-bottom:1px solid var(--outline-var)}
+.fbody{padding:14px 18px 18px;display:grid;gap:14px}
+.frow{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.flabel{font-size:12px;font-weight:700;color:var(--on-surface-var);text-transform:uppercase;letter-spacing:.6px;width:100%}
+.gchips{display:flex;flex-wrap:wrap;gap:6px}
+.fchip{
+  border:1px solid var(--outline-var);background:transparent;border-radius:9px;
+  padding:5px 11px;font-size:12.5px;font-weight:600;cursor:pointer;color:var(--on-surface-var);
+  transition:all var(--dur-1) var(--ease-emph);
+}
+.fchip[aria-pressed="true"]{background:var(--md-tertiary-container);color:var(--md-on-primary-container);border-color:transparent}
+.seg{display:inline-flex;background:var(--sc-2);border-radius:999px;padding:3px;gap:2px;flex-wrap:wrap}
+.seg button{border:none;background:transparent;border-radius:999px;padding:6px 14px;cursor:pointer;font-size:12.5px;font-weight:600;color:var(--on-surface-var)}
+.seg button[aria-pressed="true"]{background:var(--sc-4);color:var(--on-surface)}
+.linkbtn{border:none;background:none;color:var(--md-primary);cursor:pointer;font-weight:700;font-size:12.5px;padding:4px 8px;border-radius:8px}
+.linkbtn:hover{background:var(--sc-2)}
+
+/* ── Сетка карточек (фиксированные колонки) ─────── */
+.grid{display:grid;gap:14px;grid-template-columns:repeat(2,1fr)}
+@media(min-width:640px){.grid{grid-template-columns:repeat(3,1fr)}}
+@media(min-width:920px){.grid{grid-template-columns:repeat(4,1fr)}}
+.grid2{display:grid;gap:14px;grid-template-columns:1fr}
+@media(min-width:760px){.grid2{grid-template-columns:repeat(2,1fr)}}
+
+/* ── Карточка игры ──────────────────────────────── */
+.card{
+  background:var(--sc-2);border-radius:22px;overflow:hidden;cursor:pointer;
+  border:1px solid color-mix(in srgb,var(--outline-var) 55%,transparent);
+  transition:transform var(--dur-2) var(--ease-spring),box-shadow var(--dur-2),background var(--dur-2);
+  display:flex;flex-direction:column;position:relative;
+}
+.card:hover{transform:translateY(-3px);box-shadow:0 8px 22px rgba(0,0,0,.32)}
+.card:active{transform:scale(.97)}
+.covwrap{position:relative;aspect-ratio:3/4;background:var(--sc-3);overflow:hidden}
+.covwrap img{width:100%;height:100%;object-fit:contain;display:block;background:linear-gradient(160deg,var(--sc-3),var(--sc-2));padding:4px}
+.scorebadge{
+  position:absolute;top:9px;right:9px;background:color-mix(in srgb,var(--md-surface) 80%,transparent);
+  backdrop-filter:blur(6px);color:var(--md-primary);font-weight:800;font-size:13.5px;
+  border-radius:12px;padding:3px 9px;letter-spacing:.3px;
+}
+.donebadge{
+  position:absolute;top:9px;left:9px;background:var(--done-container);color:var(--on-done-container);
+  border-radius:999px;padding:4px 10px;font-size:11.5px;font-weight:800;
+  display:inline-flex;align-items:center;gap:5px;
+}
+.donebadge svg{width:12px;height:12px;fill:currentColor}
+.emubadge{
+  position:absolute;bottom:9px;left:9px;background:color-mix(in srgb,var(--md-tertiary-container) 88%,transparent);
+  color:var(--md-tertiary);border-radius:8px;padding:2px 8px;font-size:11px;font-weight:800;letter-spacing:.4px;
+}
+.cardbody{padding:11px 13px 13px;display:flex;flex-direction:column;gap:5px;flex:1}
+.ctitle{font-weight:700;font-size:14.5px;line-height:1.3;overflow-wrap:anywhere}
+.cmeta{font-size:12px;color:var(--on-surface-var);display:flex;flex-wrap:wrap;gap:4px 8px}
+.cwhy{font-size:12.3px;color:var(--on-surface-var);line-height:1.45;
+  display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.ctime{font-size:12px;color:var(--md-secondary);font-weight:600}
+.cardbtns{display:flex;gap:6px;margin-top:6px}
+.mini{
+  flex:1;min-width:0;border:none;border-radius:11px;padding:7px 4px;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  display:inline-flex;align-items:center;justify-content:center;gap:5px;
+  transition:all var(--dur-1) var(--ease-emph);
+}
+.mini svg{width:14px;height:14px;fill:currentColor}
+.mini.done{background:var(--done-container);color:var(--on-done-container)}
+.mini.notdone{background:var(--sc-3);color:var(--on-surface-var)}
+.mini.notdone:hover{background:var(--sc-4)}
+.mini.notes{background:var(--md-primary-container);color:var(--on-primary-container)}
+
+/* вертикальный список карточек */
+.vlist{display:grid;gap:10px}
+.vcard{
+  display:grid;grid-template-columns:86px 1fr;gap:12px;background:var(--sc-2);
+  border-radius:18px;padding:9px;cursor:pointer;border:1px solid color-mix(in srgb,var(--outline-var) 55%,transparent);
+  transition:transform var(--dur-2) var(--ease-spring),background var(--dur-2);
+}
+.vcard:hover{transform:translateY(-2px)}
+.vcard .covwrap{aspect-ratio:3/4;border-radius:12px}
+.vcard .vbody{display:flex;flex-direction:column;gap:3px;min-width:0;padding:2px 2px 2px 0}
+
+/* ── Группы по эмулируемой платформе (аккордеоны) ─ */
+details.emugroup{
+  background:var(--sc-1);border:1px solid var(--outline-var);border-radius:20px;
+  margin-bottom:12px;overflow:hidden;
+}
+details.emugroup>summary{
+  list-style:none;cursor:pointer;padding:12px 17px;display:flex;align-items:center;gap:10px;
+  font-weight:800;font-size:14.5px;
+}
+details.emugroup>summary::-webkit-details-marker{display:none}
+details.emugroup>summary .chev{margin-left:auto;transition:transform var(--dur-2) var(--ease-emph)}
+details.emugroup[open]>summary .chev{transform:rotate(180deg)}
+details.emugroup>summary .cnt{
+  background:var(--sc-3);border-radius:999px;font-size:11.5px;padding:2px 9px;color:var(--on-surface-var);font-weight:700;
+}
+details.emugroup>summary svg{width:18px;height:18px;flex:none}
+.emugbody{padding:0 12px 12px}
+
+/* ── Лист_Detail (шторка) ───────────────────────── */
+.scim{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:60;opacity:0;transition:opacity var(--dur-2);backdrop-filter:blur(3px);pointer-events:none;visibility:hidden}
+.scim.on{opacity:1;pointer-events:auto;visibility:visible}
+.sheet{
+  position:fixed;left:0;right:0;bottom:0;z-index:61;max-height:92dvh;overflow-y:auto;
+  background:var(--sc-2);border-radius:28px 28px 0 0;padding:8px 18px 30px;
+  transform:translateY(105%);transition:transform var(--dur-3) var(--ease-spring);
+  overscroll-behavior:contain;visibility:hidden;touch-action:pan-y;
+}
+@media(min-width:760px){
+  .sheet{left:50%;right:auto;bottom:auto;top:50%;width:640px;max-height:90dvh;border-radius:28px;
+    transform:translate(-50%,-46%) scale(.96);opacity:0;transition:all var(--dur-3) var(--ease-spring);visibility:hidden}
+  .sheet.on{transform:translate(-50%,-50%) scale(1);opacity:1;visibility:visible}
+}
+.sheet.on{transform:translateY(0);visibility:visible}
+.grabber{width:36px;height:4px;border-radius:99px;background:var(--outline-var);margin:6px auto 14px}
+.dhead{display:grid;grid-template-columns:150px 1fr;gap:16px}
+@media(max-width:420px){.dhead{grid-template-columns:112px 1fr}}
+.dhead .covwrap{border-radius:16px;aspect-ratio:3/4}
+.dtitle{font-size:20px;font-weight:800;line-height:1.25;margin:0 0 6px;overflow-wrap:anywhere}
+.dmeta{display:flex;flex-wrap:wrap;gap:6px}
+.tag{background:var(--sc-3);border-radius:8px;padding:3px 10px;font-size:12px;font-weight:700;color:var(--on-surface-var)}
+.tag.acc{background:var(--md-primary-container);color:var(--on-primary-container)}
+.tag.time{background:var(--md-tertiary-container);color:var(--md-tertiary)}
+.dwhy{background:var(--sc-1);border-radius:16px;padding:12px 15px;font-size:13.5px;line-height:1.55;color:var(--on-surface-var);margin:14px 0}
+.dwhy b{color:var(--md-primary);display:block;font-size:11.5px;text-transform:uppercase;letter-spacing:.7px;margin-bottom:4px}
+.dorigin{font-size:12.5px;color:var(--on-surface-var);margin:0 0 12px}
+.dorigin b{color:var(--md-tertiary)}
+.dbtns{display:flex;gap:9px;flex-wrap:wrap;margin-bottom:6px}
+.btn{
+  border:none;border-radius:14px;padding:11px 18px;font-weight:800;font-size:13.5px;cursor:pointer;
+  display:inline-flex;align-items:center;gap:7px;transition:all var(--dur-2) var(--ease-spring);
+}
+.btn svg{width:17px;height:17px;fill:currentColor}
+.btn.primary{background:#5856A8;color:#fff}
+html[data-theme="dark"] .btn.primary{background:#7B74E4;color:#0F0E22}
+.btn.primary:active{transform:scale(.95)}
+.btn.tonal{background:var(--md-secondary-container);color:var(--on-surface)}
+.btn.done{background:var(--done-container);color:var(--on-done-container)}
+.btn.ghost{background:transparent;border:1px solid var(--outline-var);color:var(--on-surface-var)}
+
+/* ── Заметки ────────────────────────────────────── */
+.notesec{margin-top:16px}
+.notesec h3{font-size:16px;font-weight:800;margin:0 0 10px;display:flex;align-items:center;gap:8px}
+.notesec h3 svg{width:18px;height:18px;fill:var(--md-primary)}
+.tchips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:9px}
+.tchip{
+  border:1px dashed var(--outline);background:transparent;color:var(--on-surface-var);
+  border-radius:10px;padding:6px 11px;font-size:12.3px;font-weight:600;cursor:pointer;
+  transition:all var(--dur-1);
+}
+.tchip:hover{border-color:var(--md-primary);color:var(--md-primary)}
+textarea.note{
+  width:100%;min-height:96px;background:var(--sc-1);border:1px solid var(--outline-var);
+  border-radius:16px;padding:12px 14px;resize:vertical;outline:none;font-size:13.5px;line-height:1.55;
+}
+textarea.note:focus{border-color:var(--md-primary)}
+.notelist{display:grid;gap:8px;margin-top:10px}
+.noteitem{background:var(--sc-1);border-radius:14px;padding:11px 14px;position:relative;font-size:13.3px;line-height:1.5;white-space:pre-wrap;overflow-wrap:anywhere}
+.noteitem .nd{font-size:11px;color:var(--on-surface-var);font-weight:700;margin-bottom:4px;letter-spacing:.4px}
+.noteitem .nact{position:absolute;top:8px;right:8px;display:flex;gap:2px}
+.noteitem .nact button{border:none;background:none;cursor:pointer;width:30px;height:30px;border-radius:8px;display:inline-flex;align-items:center;justify-content:center}
+.noteitem .nact button:hover{background:var(--sc-3)}
+.noteitem .nact svg{width:15px;height:15px;fill:var(--on-surface-var)}
+.nempty{color:var(--on-surface-var);font-size:13px;text-align:center;padding:14px;background:var(--sc-1);border-radius:14px;border:1px dashed var(--outline-var)}
+
+/* ── Настройки / шторки ─────────────────────────── */
+.setrow{display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid var(--outline-var);flex-wrap:wrap}
+.setrow:last-child{border-bottom:none}
+.setrow .sl{flex:1;min-width:140px}
+.setrow .sl b{display:block;font-size:14px}
+.setrow .sl span{font-size:12px;color:var(--on-surface-var)}
+.switch{position:relative;width:52px;height:32px;flex:none}
+.switch input{opacity:0;width:100%;height:100%;position:absolute;margin:0;cursor:pointer;z-index:2}
+.switch .tr{position:absolute;inset:0;background:#5A5963;border-radius:999px;border:2px solid #B9B7C4;transition:all var(--dur-2) var(--ease-emph)}
+html[data-theme="light"] .switch .tr{background:#9B99A8;border-color:#5A5963}
+.switch .th{position:absolute;top:8px;left:8px;width:16px;height:16px;background:#FFFFFF;border-radius:99px;transition:all var(--dur-2) var(--ease-spring);z-index:1;box-shadow:0 1px 3px rgba(0,0,0,.4)}
+.switch input:checked~.tr{background:#6D5FE8;border-color:#6D5FE8}
+.switch input:checked~.th{left:26px;width:20px;height:20px;top:6px;background:#FFFFFF}
+
+/* ── Тост ───────────────────────────────────────── */
+#toast{
+  position:fixed;bottom:22px;left:50%;transform:translate(-50%,80px);z-index:80;
+  background:var(--sc-4);color:var(--on-surface);border-radius:14px;padding:11px 19px;
+  font-size:13.5px;font-weight:600;opacity:0;transition:all var(--dur-3) var(--ease-spring);
+  box-shadow:0 6px 20px rgba(0,0,0,.4);max-width:88vw;text-align:center;pointer-events:none;
+}
+#toast.on{transform:translate(-50%,0);opacity:1}
+
+/* ── Эмуляция (гайды) ───────────────────────────── */
+.guidecard{background:var(--sc-1);border:1px solid var(--outline-var);border-radius:20px;margin-bottom:12px;overflow:hidden}
+.guidecard>summary{list-style:none;cursor:pointer;padding:14px 17px;font-weight:800;font-size:15px;display:flex;gap:10px;align-items:center}
+.guidecard>summary::-webkit-details-marker{display:none}
+.guidecard>summary .dev{background:var(--md-primary-container);color:var(--on-primary-container);border-radius:8px;padding:2px 9px;font-size:11.5px}
+.guidecard ul{margin:0;padding:0 17px 16px 40px;display:grid;gap:8px}
+.guidecard li{font-size:13.3px;color:var(--on-surface-var);line-height:1.55}
+.intro{background:var(--md-primary-container);color:var(--on-primary-container);border-radius:18px;padding:13px 16px;font-size:13.3px;line-height:1.55;margin-bottom:14px}
+
+/* пройденные */
+.originchip{font-size:11px;font-weight:800;background:var(--sc-3);color:var(--on-surface-var);border-radius:7px;padding:2px 8px}
+.empty{ text-align:center;color:var(--on-surface-var);padding:44px 18px;font-size:14px}
+.empty svg{width:44px;height:44px;fill:var(--outline-var);margin-bottom:10px}
+.sentinel{height:10px}
+.pager{display:flex;justify-content:center;align-items:center;gap:12px;margin:18px 0 4px;flex-wrap:wrap}
+.pager .pg{font-size:13px;color:var(--on-surface-var);font-weight:700}
+.footer-note{text-align:center;color:var(--on-surface-var);font-size:11.5px;padding:26px 10px 8px;opacity:.8}
+
+/* ── v4.1 ── */
+.scorebadge svg{width:11px;height:11px;fill:#F2C94C;vertical-align:-1px}
+.scoreline{color:var(--md-primary);font-weight:700}
+.rotbadge{
+  position:absolute;bottom:9px;right:9px;background:color-mix(in srgb,var(--done-container) 88%,transparent);
+  color:var(--on-done-container);border-radius:8px;padding:3px 8px;font-size:10.5px;font-weight:800;
+  display:inline-flex;align-items:center;gap:4px;
+}
+.rotbadge svg{width:10px;height:10px;fill:currentColor}
+.scoretag svg{width:13px;height:13px;fill:#F2C94C;vertical-align:-2px}
+.cardbtns{flex-wrap:nowrap}
+.mini.copy,.mini.tores{flex:0 0 38px}
+.mini svg{flex:none}
+.iconbtn.inline{width:30px;height:30px;vertical-align:-6px}
+.iconbtn.inline svg{width:16px;height:16px;fill:var(--on-surface-var)}
+.dwhy.about{border:1px solid var(--outline-var)}
+.btn.rot{background:var(--md-secondary-container);color:var(--on-surface)}
+.btn.link{background:transparent;border:1px solid var(--outline-var);color:var(--md-primary);text-decoration:none}
+.btn.link:hover{border-color:var(--md-primary)}
+.nfield{display:grid;gap:4px;font-size:12px;font-weight:700;color:var(--on-surface-var);margin-bottom:8px}
+.nfield textarea{
+  width:100%;background:var(--sc-1);border:1px solid var(--outline-var);border-radius:12px;
+  padding:9px 12px;resize:vertical;outline:none;font-size:13px;font-weight:400;line-height:1.5;color:var(--on-surface);
+}
+.nfield textarea:focus{border-color:var(--md-primary)}
+.rotcard{background:var(--sc-1);border:1px solid var(--outline-var);border-radius:18px;padding:14px 16px;margin-bottom:10px}
+.rothead{display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px;font-size:13.5px;color:var(--on-surface-var);margin-bottom:9px}
+.rothead b{color:var(--on-surface)}
+.rothead .warn{color:var(--md-error);font-weight:800}
+.bar{height:10px;background:var(--sc-3);border-radius:99px;overflow:hidden}
+.bar .fill{height:100%;background:var(--md-primary);border-radius:99px;transition:width var(--dur-3) var(--ease-emph)}
+.bar .fill.hot{background:var(--md-error)}
+.hint{font-size:12.5px;color:var(--on-surface-var);margin:0 0 12px}
+
+/* ── v4.2 ── */
+#listbox{overflow-anchor:none}
+.card,.vcard{content-visibility:auto;contain-intrinsic-size:auto 320px}
+.sheet-dragging{transition:none!important}
+.btn.md{background:var(--sc-3);color:var(--on-surface)}
+
+/* ── v4.4: кнопки на узких DPI ── */
+@media(max-width:430px){
+  .cardbtns{flex-wrap:wrap}
+  .mini{flex:1 1 auto;min-width:64px}
+  .mini.copy,.mini.tores{flex:1 1 44px;min-width:44px}
+  .mini svg{width:12px;height:12px}
+  .mini{font-size:10.6px;padding:6px 4px}
+}
+
+/* ── v4.6: таб-панель сверху, равные карточки, иконки ── */
+.tabbar{
+  position:sticky;top:63px;z-index:35;display:flex;
+  background:color-mix(in srgb,var(--md-surface) 94%,transparent);
+  backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+  border-bottom:1px solid var(--outline-var);
+}
+.tabitem{
+  flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;
+  padding:8px 0 7px;border:none;background:transparent;cursor:pointer;position:relative;
+  color:var(--on-surface-var);font-weight:700;font-size:10.5px;
+  transition:color var(--dur-2) var(--ease-emph);
+}
+.tabitem svg{width:21px;height:21px;fill:currentColor}
+.tabitem .nlb{letter-spacing:.2px}
+.tabitem.on{color:var(--md-primary)}
+.tabitem.on::after{content:"";position:absolute;bottom:0;left:22%;right:22%;height:3px;border-radius:3px 3px 0 0;background:var(--md-primary)}
+.navbadge{
+  position:absolute;top:-4px;right:calc(50% - 22px);background:var(--md-primary);color:var(--on-primary);
+  font-size:9px;font-weight:800;font-style:normal;border-radius:99px;padding:1px 5px;
+}
+.tabitem .nic{position:relative;display:inline-flex}
+.cardbody{gap:5px}
+.ctitle{font-size:14px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;min-height:2.55em}
+.cwhy{-webkit-line-clamp:2;min-height:2.8em}
+.cmeta{min-height:1.6em}
+.ctime{min-height:1.5em}
+.cardbtns{margin-top:auto}
+.mini.ic{flex:1 1 0;min-width:0;padding:8px 0}
+.mini.ic svg{width:16px;height:16px}
+.mini.ic.tores.done{background:var(--md-primary-container);color:var(--on-primary-container)}
+.vcard .mini.ic{flex:0 0 46px}
+
+/* ── v4.7: меню-сетка, свитчи, иконка брошено ── */
+.menugrid{display:grid;grid-template-columns:1fr 1fr;gap:9px;padding-bottom:8px}
+@media(max-width:420px){.menugrid{grid-template-columns:1fr}}
+.menucard{
+  display:flex;align-items:center;gap:11px;text-align:left;
+  background:var(--sc-1);border:1px solid var(--outline-var);border-radius:16px;
+  padding:13px 14px;cursor:pointer;color:var(--on-surface);
+  transition:all var(--dur-2) var(--ease-spring);
+}
+.menucard:hover{transform:translateY(-1px);border-color:var(--md-primary)}
+.menucard.on{background:var(--md-primary-container);color:var(--on-primary-container);border-color:transparent}
+.menucard .mico{width:38px;height:38px;border-radius:12px;background:var(--sc-3);display:inline-flex;align-items:center;justify-content:center;flex:none;overflow:hidden}
+.menucard.on .mico{background:color-mix(in srgb,var(--md-primary) 25%,transparent)}
+.menucard .mico svg{width:20px;height:20px;fill:var(--md-primary)}
+.menucard.on .mico svg{fill:var(--on-primary-container)}
+.menucard .mtxt{flex:1;font-size:13.5px;font-weight:700;line-height:1.25;min-width:0;overflow-wrap:anywhere}
+.menucard .mcnt{background:var(--sc-3);color:var(--on-surface-var);border-radius:99px;padding:2px 9px;font-size:11.5px;font-weight:800;flex:none}
+.menucard.on .mcnt{background:color-mix(in srgb,var(--on-primary-container) 18%,transparent);color:var(--on-primary-container)}
+.mini.ic.drop.done{background:var(--md-tertiary-container);color:var(--md-tertiary)}
+.switch{width:56px;height:34px}
+.switch .tr{background:#615F6B;border:2px solid #C9C7D2}
+html[data-theme="light"] .switch .tr{background:#A5A3B0;border-color:#5A5963}
+.switch .th{width:14px;height:14px;top:8px;left:7px;background:#FFF;box-shadow:0 2px 4px rgba(0,0,0,.45)}
+.switch input:checked~.tr{background:#6D5FE8;border-color:#6D5FE8}
+.switch input:checked~.th{left:31px;width:18px;height:18px;top:6px;background:#FFF}
+
+/* Медиа дневник — стилевые дополнения (v1.1). Единый стиль M3, без касаний элементов. */
+
+/* ── Обложка: целиком, с подложкой, углы не касаются карточки ── */
+.covwrap{padding:8px 8px 6px;background:linear-gradient(160deg,var(--sc-3),var(--sc-2))}
+.covwrap img{object-fit:contain;border-radius:12px;box-shadow:0 1px 4px rgba(0,0,0,.35)}
+.covwrap{aspect-ratio:3/4}
+.vcard .covwrap{aspect-ratio:3/4}
+.scorebadge svg,.myscorebadge svg{width:11px;height:11px;vertical-align:-1px}
+.myscorebadge{position:absolute;bottom:9px;right:9px;background:#3D5A3F;color:#D3F8BC;border-radius:10px;padding:2px 8px;font-size:11px;font-weight:800}
+.scorebadge{top:9px;right:9px}
+.scoreline.mine{color:#B7E3A0}
+.donebadge.dropb{background:var(--md-tertiary-container);color:var(--md-tertiary)}
+
+/* ── Теги ── */
+.tagchip{display:inline-block;color:#14141A;font-weight:800;font-size:11px;padding:2px 8px;line-height:1.4}
+.tagchip.sm{font-size:9.5px;padding:1px 6px}
+.tagchip-btn{border:none;background:transparent;cursor:pointer;padding:2px}
+.tagchip-btn.on .tagchip{outline:2px solid var(--md-primary);outline-offset:1px}
+.covertags{position:absolute;bottom:30px;left:8px;display:flex;flex-wrap:wrap;gap:3px;max-width:calc(100% - 16px)}
+.rtags{display:flex;gap:3px;flex-wrap:wrap;justify-content:flex-end}
+
+/* ── Компактный вид: только название и год ── */
+.rowslist{display:grid;gap:6px}
+.rowitem{display:grid;grid-template-columns:1fr 52px 64px auto;gap:10px;align-items:center;
+  background:var(--sc-2);border:1px solid var(--outline-var);border-radius:12px;padding:9px 13px;cursor:pointer;
+  transition:transform var(--dur-2) var(--ease-spring)}
+.rowitem:hover{transform:translateY(-1px)}
+.rowitem.isdrop{opacity:.6}
+.rtitle{font-weight:700;font-size:13.5px;overflow-wrap:anywhere}
+.ryear{color:var(--on-surface-var);font-size:12.5px;text-align:right}
+.rscore{color:var(--md-primary);font-weight:800;font-size:12px;text-align:right}
+.rowhead{display:grid;grid-template-columns:1fr 52px 64px auto;gap:10px;padding:0 13px;
+  color:var(--on-surface-var);font-size:10.5px;font-weight:800;text-transform:uppercase;letter-spacing:.5px}
+
+/* ── Статистика ── */
+.statrow{display:grid;grid-template-columns:110px 1fr auto;gap:10px;align-items:center;margin-bottom:10px}
+.statlb{font-size:13px;font-weight:700;color:var(--on-surface-var)}
+.statn{font-size:12.5px;color:var(--on-surface-var);font-weight:700;white-space:nowrap}
+.bar{height:10px;background:var(--sc-3);border-radius:99px;overflow:hidden}
+.bar .fill{height:100%;background:var(--md-primary);border-radius:99px;transition:width var(--dur-3) var(--ease-emph)}
+.bar .fill.ok{background:var(--done,#7BC47F)}
+.bar .fill.hot{background:var(--md-error,#E57373)}
+
+/* ── Кнопки состояний: один ряд, компактно ── */
+.dbtns{display:flex;flex-wrap:wrap;gap:7px;align-items:center}
+.dbtns .btn{padding:9px 13px;font-size:12.5px;white-space:nowrap}
+.dbtns.row{flex-wrap:nowrap}
+@media(max-width:380px){.dbtns.row{flex-wrap:wrap}.dbtns.row .btn{flex:1 1 45%}}
+
+/* ── Отступы: элементы не касаются друг друга ── */
+main{padding:14px 14px 40px}
+.viewhead{margin:4px 0 14px}
+#extra{margin-bottom:12px}
+.headrow{margin:2px 0 12px}
+.menucard{margin:0}
+.menurows .setrow{padding:10px 2px}
+.footer-note{padding:18px 12px 16px}
+.details-gap{height:12px}
+
+/* ── v1.2: компакт-колонки, шторка-кнопки, поля, теги-менеджер ── */
+.rowslist .rowitem, .rowslist .rowhead{grid-template-columns:minmax(0,1fr) 56px 74px 110px}
+.rowslist .rtitle{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rowslist .rtags{justify-content:flex-end;overflow:hidden}
+.sheet .dbtns{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}
+.sheet .dbtns .btn{justify-content:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:9px 10px;font-size:12.5px}
+.sheet .dbtns .btn.primary{grid-column:1/-1}
+.ninput{
+  width:100%;background:var(--sc-1);border:1px solid var(--outline-var);border-radius:12px;
+  padding:10px 13px;outline:none;font-size:13.5px;color:var(--on-surface);
+  transition:border-color var(--dur-2) var(--ease-emph);
+}
+.ninput:focus{border-color:var(--md-primary)}
+select.m3, .ninput{height:42px;box-sizing:border-box}
+textarea.note, textarea.nfield-text{border-radius:14px}
+.tcolor{padding:0;border-radius:8px}
+.setrow{gap:10px}
+.menurows .setrow{border-bottom:1px solid var(--outline-var)}
+.tagchip.demo{font-size:13px;padding:4px 12px}
+
+/* ── Прохождения: журнал в шторке ── */
+.plist{display:grid;gap:6px;margin:2px 0 4px}
+.pitem{display:flex;align-items:center;gap:10px;background:var(--sc-1);border-radius:12px;padding:8px 12px}
+.pitem .pd{font-weight:800;font-size:13px}
+.pitem .ph{color:var(--on-surface-var);font-size:12.5px;font-weight:700}
+.pitem button{margin-left:auto;border:none;background:none;cursor:pointer;width:30px;height:30px;border-radius:8px;display:inline-flex;align-items:center;justify-content:center;flex:none}
+.pitem button:hover{background:var(--sc-3)}
+.pitem button svg{width:15px;height:15px;fill:var(--on-surface-var)}
+.pempty{font-size:12.5px;color:var(--on-surface-var);padding:2px 2px 4px}
+#pldate,#plhours{background:var(--sc-1);border:1px solid var(--outline-var);border-radius:12px;padding:9px 12px;color:var(--on-surface);font-size:13px;outline:none;height:42px;box-sizing:border-box;font-family:inherit}
+#pldate:focus,#plhours:focus{border-color:var(--md-primary)}
+
+/* ── Табличный вид (table): заголовок и строки с одинаковыми колонками ── */
+.tablelist{display:grid;gap:6px}
+.thead{display:grid;grid-template-columns:minmax(0,1fr) 40px 46px 74px 50px 34px;gap:8px;padding:0 13px}
+.thead .tcol{border:none;background:none;color:var(--on-surface-var);font-size:10.5px;font-weight:800;
+  text-transform:uppercase;letter-spacing:.4px;cursor:pointer;padding:2px 0;font-family:inherit}
+.thead .tcol.on{color:var(--md-primary)}
+.trow{display:grid;grid-template-columns:minmax(0,1fr) 40px 46px 74px 50px 34px;gap:8px;align-items:center;
+  background:var(--sc-2);border:1px solid var(--outline-var);border-radius:12px;padding:9px 13px;cursor:pointer;
+  transition:transform var(--dur-2) var(--ease-spring)}
+.trow:hover{transform:translateY(-1px)}
+.trow.isdrop{opacity:.6}
+.trow .tt{font-weight:700;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.trow .ty{color:var(--on-surface-var);font-size:12px;text-align:right}
+.trow .ts{color:var(--md-primary);font-weight:800;font-size:12px;text-align:right;white-space:nowrap}
+.trow .td{font-weight:800;font-size:12px;white-space:nowrap}
+.trow .th{color:var(--on-surface-var);font-size:12px;text-align:right;white-space:nowrap}
+.trow .tp{color:var(--on-surface-var);font-size:12px;text-align:center;font-weight:800}
+
+/* ── Свайп между вкладками состояний ── */
+#listbox{transition:transform .14s ease,opacity .14s ease}
+#listbox.swipe-l{transform:translateX(-24px);opacity:.55}
+#listbox.swipe-r{transform:translateX(24px);opacity:.55}
+
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+// Модуль 00-consts. Состояния, типы медиа, шаблоны, иконки, теги.
+"use strict";
+const STATE_ORDER = ["backlog", "active", "done", "dropped"];
+const STATE_NAME = {backlog: "В планах", active: "В процессе", done: "Завершено", dropped: "Брошено"};
+const STATE_ICON = {
+  backlog: '<svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6z"/></svg>',
+  active: '<svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>',
+  done: '<svg viewBox="0 0 24 24"><path d="M9 16.2 4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4z"/></svg>',
+  dropped: '<svg viewBox="0 0 24 24"><path d="M17 3H7c-1.1 0-2 .9-2 2v16l7-3 7 3V5c0-1.1-.9-2-2-2zm-2 8H9V9h6v2z"/></svg>'
+};
+const FIELD_LIB = {
+  title: {t: "text", n: "Название*", req: 1},
+  year: {t: "year", n: "Год"},
+  creator: {t: "text", n: "Автор / студия"},
+  studio: {t: "text", n: "Студия"},
+  country: {t: "text", n: "Страна"},
+  platform: {t: "text", n: "Платформа"},
+  director: {t: "text", n: "Режиссёр"},
+  author: {t: "text", n: "Автор"},
+  artist: {t: "text", n: "Художник"},
+  seasons: {t: "num", n: "Сезонов"},
+  episodes: {t: "num", n: "Эпизодов / глав"},
+  volumes: {t: "num", n: "Томов"},
+  pages: {t: "num", n: "Страниц"},
+  duration: {t: "text", n: "Длительность"},
+  score: {t: "score", n: "Оценка критиков (0–100)"},
+  sizeGb: {t: "numf", n: "Объём, ГБ"}
+};
+const TYPE_PRESETS = [
+  {name: "Игры", fields: ["title", "year", "platform", "score", "sizeGb", "why"]},
+  {name: "Фильмы", fields: ["title", "year", "country", "director", "duration", "score", "why"]},
+  {name: "Сериалы", fields: ["title", "year", "country", "studio", "seasons", "episodes", "score", "why"]},
+  {name: "Аниме", fields: ["title", "year", "country", "studio", "episodes", "score", "why"]},
+  {name: "Манга", fields: ["title", "author", "artist", "volumes", "score", "why"]},
+  {name: "Манхва", fields: ["title", "author", "artist", "volumes", "score", "why"]},
+  {name: "Комиксы", fields: ["title", "author", "artist", "volumes", "score", "why"]},
+  {name: "Мультфильмы", fields: ["title", "year", "country", "studio", "duration", "score", "why"]},
+  {name: "Мультсериалы", fields: ["title", "year", "country", "studio", "seasons", "episodes", "score", "why"]},
+  {name: "Книги", fields: ["title", "author", "year", "pages", "score", "why"]}
+];
+const DEFAULT_TYPES = ["Игры", "Фильмы", "Сериалы", "Аниме", "Манга", "Мультфильмы"]
+  .map(n => TYPE_PRESETS.find(t => t.name === n));
+const TPL = [
+  {n: "Сессия", fields: [["🎯 Текущая цель", ""], ["✅ Что сделал", ""], ["⏱ Время", "дата · сколько · что именно"], ["📌 План на следующий раз", ""]]},
+  {n: "Первые впечатления", fields: [["👀 Первые минуты", ""], ["👍 Что цепляет", ""], ["👎 Что мешает", ""], ["⚖ Вердикт: продолжать?", ""]]},
+  {n: "Сложный момент", fields: [["🧱 Где застрял", ""], ["🔧 Что пробовал", ""], ["🗝 Как победил / план", ""]]},
+  {n: "Финал — итоги", fields: [["🏁 Финал и впечатление", ""], ["⭐ Личная оценка /10", ""], ["🔁 Вернуться ли", ""]]},
+  {n: "Свободная заметка", fields: null}
+];
+const TAG_COLORS = ["#E8B04B", "#7BC47F", "#5B9BD5", "#E57373", "#BA68C8", "#4DD0E1", "#FFD54F", "#AED581", "#F48FB1", "#90A4AE"];
+const TAG_SHAPES = [["round", "Круг"], ["square", "Квадрат"], ["diamond", "Ромб"], ["flag", "Флаг"]];
+const ICON = {
+  check: '<svg viewBox="0 0 24 24"><path d="M9 16.2 4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4z"/></svg>',
+  pen: '<svg viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.8 9.94l-3.75-3.75L3 17.25zM20.7 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>',
+  copy: '<svg viewBox="0 0 24 24"><path d="M16 1H4a2 2 0 0 0-2 2v14h2V3h12V1zm3 4H8a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2zm0 16H8V7h11v14z"/></svg>',
+  chev: '<svg class="chev" viewBox="0 0 24 24" fill="#C7C5D0"><path d="M7.4 8.6 12 13.2l4.6-4.6L18 10l-6 6-6-6z"/></svg>',
+  play: '<svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>',
+  trash: '<svg viewBox="0 0 24 24"><path d="M6 19a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V7H6zM19 4h-3.5l-1-1h-5l-1 1H5v2h14z"/></svg>',
+  star: '<svg viewBox="0 0 24 24"><path d="m12 17.3-6.2 3.7 1.6-7L2 9.2l7.1-.6L12 2l2.9 6.6 7.1.6-5.4 4.8 1.6 7z"/></svg>',
+  plus: '<svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6z"/></svg>',
+  img: '<svg viewBox="0 0 24 24"><path d="M21 19V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2zM8.5 13.5l2.5 3 3.5-4.5 4.5 6H5z"/></svg>',
+  drop: '<svg viewBox="0 0 24 24"><path d="M17 3H7c-1.1 0-2 .9-2 2v16l7-3 7 3V5c0-1.1-.9-2-2-2zm-2 8H9V9h6v2z"/></svg>',
+  menu: '<svg viewBox="0 0 24 24"><path d="M3 5h18v2H3zm0 6h18v2H3zm0 6h18v2H3z"/></svg>',
+  wipe: '<svg viewBox="0 0 24 24"><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2zM4 12c0-4.4 3.6-8 8-8 1.9 0 3.6.6 4.9 1.7L5.7 16.9C4.6 15.6 4 13.9 4 12zm8 8c-1.9 0-3.6-.6-4.9-1.7L18.3 7.1C19.4 8.4 20 10.1 20 12c0 4.4-3.6 8-8 8z"/></svg>',
+  sad: '<svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zM8.5 8A1.5 1.5 0 1 1 7 9.5 1.5 1.5 0 0 1 8.5 8zm7 0A1.5 1.5 0 1 1 14 9.5 1.5 1.5 0 0 1 15.5 8zM7 14h10a5 5 0 0 1-10 0z"/></svg>',
+  stats: '<svg viewBox="0 0 24 24"><path d="M5 21V9h4v12H5zm7 0V3h4v18h-4zm7 0v-8h4v8h-4z"/></svg>',
+  tags: '<svg viewBox="0 0 24 24"><path d="M21.4 11.6l-9-9C12 2.2 11.5 2 11 2H4c-1.1 0-2 .9-2 2v7c0 .5.2 1 .6 1.4l9 9c.4.4.9.6 1.4.6s1-.2 1.4-.6l7-7c.4-.4.6-.9.6-1.4s-.2-1-.6-1.4zM6.5 8C5.7 8 5 7.3 5 6.5S5.7 5 6.5 5 8 5.7 8 6.5 7.3 8 6.5 8z"/></svg>',
+  edit: '<svg viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.8 9.94l-3.75-3.75L3 17.25zM20.7 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>'
+};
+
+// Модуль 01-state. Состояние, сохранение, хелперы.
+"use strict";
+const DEF = {
+  theme: "dark", view: "active", type: 0, q: "", sort: "added", layout: "grid",
+  types: null, items: {}, notes: {}, myScore: {}, customCovers: {}, tags: [],
+  itemTags: {}, plays: {}, playLog: {}, seq: 1
+};
+let S = Object.assign({}, DEF);
+try { S = Object.assign(S, JSON.parse(localStorage.getItem("md1.state") || "{}")); } catch (e) {}
+if (!S.types || !S.types.length) S.types = JSON.parse(JSON.stringify(DEFAULT_TYPES));
+if (!S.items) S.items = {};
+if (!S.notes) S.notes = {};
+if (!S.myScore) S.myScore = {};
+if (!S.customCovers) S.customCovers = {};
+if (!S.itemTags) S.itemTags = {};
+if (!S.plays) S.plays = {};
+if (!S.playLog) S.playLog = {};
+if (!S.tags) S.tags = [];
+if (!S.tags.length) {
+  S.tags = [
+    {id: "t_gold", name: "Любимое", color: "#E8B04B", shape: "round"},
+    {id: "t_next", name: "На очереди", color: "#5B9BD5", shape: "square"}
+  ];
+}
+const save = (() => { let t; return () => { clearTimeout(t); t = setTimeout(() =>
+  localStorage.setItem("md1.state", JSON.stringify(S)), 120); }; })();
+const $ = s => document.querySelector(s);
+const esc = s => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const h32 = s => { let h = 2166136261; for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); } return h >>> 0; };
+const toast = m => { const t = $("#toast"); t.textContent = m; t.classList.add("on"); clearTimeout(t._h); t._h = setTimeout(() => t.classList.remove("on"), 2600); };
+const curType = () => S.types[S.type] || S.types[0];
+const typeItems = () => S.items[curType().name] || {};
+const ensureArr = id => { const a = S.items[curType().name] = S.items[curType().name] || {}; return a; };
+const gb = v => v == null || v <= 0 ? "" : v >= 1 ? (Math.round(v * 10) / 10 + " ГБ") : Math.round(v * 1024) + " МБ";
+function stateOf(id) { const g = typeItems()[id]; return g ? (g.state || "backlog") : null; }
+function setState(id, st) {
+  const g = typeItems()[id]; if (!g) return;
+  g.state = st;
+  if (st === "done") {
+    if (!S.plays[id]) S.plays[id] = 1;
+    if (!(S.playLog[id] || []).some(p => p.d === todayISO())) addPlay(id, todayISO(), null);
+  }
+  save();
+}
+/* ── Прохождения/просмотры: журнал фактов (дата ГГГГ-ММ-ДД + опциональные часы) ── */
+const todayISO = () => { const d = new Date();
+  return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); };
+function addPlay(id, d, h) {
+  const arr = S.playLog[id] = S.playLog[id] || [];
+  const rec = {d};
+  if (h != null && +h > 0) rec.h = Math.round(+h * 10) / 10;
+  arr.push(rec);
+  arr.sort((a, b) => a.d < b.d ? -1 : a.d > b.d ? 1 : 0);
+  save();
+}
+const playCount = id => (S.playLog[id] && S.playLog[id].length) || S.plays[id] || 0;
+const lastPlayDate = id => (S.playLog[id] || []).reduce((m, p) => p.d > m ? p.d : m, "");
+const sumHours = id => (S.playLog[id] || []).reduce((s, p) => s + (p.h || 0), 0);
+function itemsOf(state) { return allOfType().filter(g => (g.state || "backlog") === state); }
+function allOfType() { return Object.values(typeItems()); }
+
+// Модуль 02-tags. Теги: создание, назначение, бейджи.
+"use strict";
+function tagById(id) { return S.tags.find(t => t.id === id); }
+function itemTags(id) { return (S.itemTags[id] || []).map(tagById).filter(Boolean); }
+function toggleItemTag(id, tagId) {
+  const arr = S.itemTags[id] = S.itemTags[id] || [];
+  const i = arr.indexOf(tagId);
+  if (i >= 0) arr.splice(i, 1); else arr.push(tagId);
+  save();
+}
+function createTag(name, color, shape) {
+  const id = "t" + Date.now().toString(36);
+  S.tags.push({id, name: name.trim(), color, shape: shape || "round"}); save();
+  return id;
+}
+function deleteTag(tagId) {
+  S.tags = S.tags.filter(t => t.id !== tagId);
+  for (const id in S.itemTags) S.itemTags[id] = (S.itemTags[id] || []).filter(x => x !== tagId);
+  save();
+}
+function tagChipHTML(t, small) {
+  const r = {round: "99px", square: "6px", diamond: "2px", flag: "99px 4px 4px 99px"}[tagShape()] || "99px";
+  return `<span class="tagchip${small ? " sm" : ""}" style="background:${t.color};border-radius:${r}">${esc(t.name)}</span>`;
+}
+function itemTagsHTML(id, small) {
+  return itemTags(id).map(t => tagChipHTML(t, small)).join("");
+}
+
+// Модуль 02b-tagmanager. Менеджер тегов: список, создание, редактирование, удаление. Единая форма.
+"use strict";
+function tagShape() { return S.tagShape || "round"; }
+function setTagShape(shape) { S.tagShape = shape; save(); }
+function openTagManager(returnToId) {
+  const back = () => { closeSheet(); if (returnToId) openSheet(returnToId); else openSettings(); };
+  const rows = S.tags.map(t => `
+    <div class="setrow" data-t="${t.id}">
+      <span class="tagchip demo" style="background:${t.color};border-radius:${t.shape === "square" ? "6px" : t.shape === "diamond" ? "2px" : t.shape === "flag" ? "99px 4px 4px 99px" : "99px"}">${esc(t.name)}</span>
+      <input class="ninput tname" data-t="${t.id}" value="${esc(t.name)}" style="flex:1;min-width:120px">
+      <input type="color" class="tcolor" data-t="${t.id}" value="${t.color}" title="Цвет тега" style="width:38px;height:34px;border:none;background:none;cursor:pointer">
+      <button class="btn ghost" data-a="save" data-t="${t.id}">${ICON.check}</button>
+      <button class="btn ghost" data-a="del" data-t="${t.id}" style="color:var(--md-error)">${ICON.trash}</button>
+    </div>`).join("");
+  $("#sheet").innerHTML = `<div class="grabber"></div><h2 class="dtitle">Теги</h2>
+    <div class="intro">Теги помечают элементы в любом типе медиа. Форма у всех тегов единая — выбирается ниже.</div>
+    <div class="setrow"><div class="sl"><b>Форма тегов</b><span>общая для всех</span></div>
+      <select class="m3" id="tagshape">${TAG_SHAPES.map(([v, n]) => `<option value="${v}" ${tagShape() === v ? "selected" : ""}>${n}</option>`).join("")}</select></div>
+    <div class="menurows" id="tagrows">${rows || '<div class="nempty">Тегов пока нет</div>'}</div>
+    <div class="setrow"><div class="sl"><b>Новый тег</b><span>имя и цвет</span></div>
+      <input class="ninput" id="tagnewname" placeholder="имя тега" style="flex:1;min-width:120px">
+      <input type="color" id="tagnewcolor" value="${TAG_COLORS[0]}" style="width:38px;height:34px;border:none;background:none;cursor:pointer">
+      <button class="btn primary" id="tagadd">${ICON.plus}</button></div>
+    <div class="dbtns"><button class="btn tonal" id="tagback">${ICON.check}Готово</button></div>`;
+  $("#tagshape").onchange = e => { setTagShape(e.target.value); openTagManager(returnToId); };
+  $("#tagadd").onclick = () => {
+    const nm = $("#tagnewname").value.trim();
+    if (!nm) { toast("Введите имя тега"); return; }
+    createTag(nm, $("#tagnewcolor").value, tagShape());
+    openTagManager(returnToId);
+  };
+  $("#tagrows").onclick = e => {
+    const b = e.target.closest("[data-a]"); if (!b) return;
+    const id = b.dataset.t;
+    if (b.dataset.a === "del") {
+      deleteTag(id); openTagManager(returnToId); toast("Тег удалён");
+    } else if (b.dataset.a === "save") {
+      const t = tagById(id); const nm = $(`.tname[data-t="${id}"]`).value.trim();
+      const col = $(`.tcolor[data-t="${id}"]`).value;
+      if (t && nm) { t.name = nm; t.color = col; save(); toast("Тег обновлён"); }
+      openTagManager(returnToId);
+    }
+  };
+  $("#tagback").onclick = back;
+  $("#scim").classList.add("on"); $("#sheet").classList.add("on");
+  document.body.style.overflow = "hidden";
+}
+
+// Модуль 03-parser. Парсер страниц по ссылке: WebView-транспорт (md-parser.local) + браузерные прокси.
+"use strict";
+let parsedCover = null;
+const PARSER_HOST = "md-parser.local";
+const isWebView = () => /Android/i.test(navigator.userAgent);
+async function transportFetch(url) {
+  const attempts = [];
+  // 1) В APK: перехват md-parser.local в MainActivity (без CORS)
+  if (isWebView()) attempts.push(() => fetch(`https://${PARSER_HOST}/p?u=${encodeURIComponent(url)}`));
+  // 2) Прямой запрос — работает для сайтов с CORS (Wikipedia API и др.)
+  attempts.push(() => fetch(url));
+  // 3) Публичные прокси (best effort)
+  attempts.push(() => fetch("https://api.allorigins.win/raw?url=" + encodeURIComponent(url)));
+  attempts.push(() => fetch("https://corsproxy.io/?url=" + encodeURIComponent(url)));
+  attempts.push(() => fetch("https://r.jina.ai/" + url));
+  let lastErr = null;
+  for (const a of attempts) {
+    try {
+      const r = await a();
+      if (!r.ok) { lastErr = new Error("HTTP " + r.status); continue; }
+      return r;
+    } catch (e) { lastErr = e; }
+  }
+  throw lastErr || new Error("нет доступного транспорта");
+}
+async function parsePage(url) {
+  if (!/^https?:\/\//.test(url)) throw new Error("нужен http(s)");
+  const sm = /store\.steampowered\.com\/app\/(\d+)/.exec(url);
+  if (sm) return parseSteam(sm[1]);
+  const kp = /kinopoisk\.[a-z]+\/(film|series)\/(\d+)/.exec(url);
+  if (kp) return parseGeneric(url, {yearBias: 1});
+  const html = await (await transportFetch(url)).text();
+  return parseHTML(html, url);
+}
+async function parseSteam(appid) {
+  const raw = await (await transportFetch(`https://store.steampowered.com/api/appdetails?appids=${appid}&l=ru`)).text();
+  const dd = ((JSON.parse(raw) || {})[appid] || {}).data;
+  if (!dd) throw new Error("Steam не отдал данные");
+  const yr = (re => re ? +re[1] : 0)(/(\d{4})/.exec((dd.release_date || {}).date || ""));
+  return {
+    title: dd.name || "", year: yr,
+    why: (dd.short_description || "").replace(/<[^>]*>/g, "").slice(0, 250),
+    cover: (dd.header_image || "").replace(/\\/, ""),
+    platform: "PC", creator: (dd.developers && dd.developers[0]) || ""
+  };
+}
+function parseHTML(html, baseUrl) {
+  const doc = new DOMParser().parseFromString(html, "text/html");
+  const meta = sel => { const el = doc.querySelector(sel); return el ? (el.getAttribute("content") || "").trim() : ""; };
+  const title = (meta('meta[property="og:title"]') || doc.title || "").replace(/\s*[|\-–—]\s*(Steam|Kinopoisk|Кинопоиск|IMDb|MyAnimeList|Shikimori).*$/i, "").trim().slice(0, 90);
+  const desc = meta('meta[property="og:description"]') || meta("description") || "";
+  const cover = meta('meta[property="og:image"]') || meta('meta[name="og:image"]') || "";
+  const abs = cover && !/^https?:/.test(cover) ? new URL(cover, baseUrl).href : cover;
+  const yr = (re => re ? +re[1] : 0)(/(19\d\d|20\d\d)/.exec(title + " " + desc));
+  return { title, year: yr, why: desc.trim().slice(0, 250), cover: abs };
+}
+
+// Модуль 04-covers. Обложки: своя → процедурная. Подложка, чтобы углы не задевали карточку.
+"use strict";
+function coverURI(g) {
+  const h = h32(g.id + g.title);
+  const hue = h % 360;
+  const c1 = `hsl(${hue},32%,34%)`, c2 = `hsl(${(hue + 40) % 360},44%,12%)`;
+  const words = esc(g.title).split(/\s+/); const lines = []; let cur = "";
+  for (const wd of words) { if ((cur + " " + wd).trim().length > 13 && cur) { lines.push(cur); cur = wd; } else cur = (cur + " " + wd).trim(); }
+  if (cur) lines.push(cur); if (lines.length > 4) { lines.length = 4; lines[3] += "…"; }
+  const maxLen = Math.max(...lines.map(l => l.length), 1);
+  const fs = Math.max(32, Math.min(58, Math.floor(440 / (maxLen * 0.56))));
+  const ty = 400 - (lines.length - 1) * fs * 0.55;
+  const tspan = lines.map((l, i) => `<tspan x='46' dy='${i ? fs * 1.08 : 0}'>${l}</tspan>`).join("");
+  return "data:image/svg+xml," + encodeURIComponent(
+    `<svg xmlns='http://www.w3.org/2000/svg' width='600' height='800' viewBox='0 0 600 800'>` +
+    `<defs><linearGradient id='g' x1='0' y1='0' x2='1' y2='1'><stop offset='0' stop-color='${c1}'/><stop offset='1' stop-color='${c2}'/></linearGradient></defs>` +
+    `<rect width='600' height='800' fill='url(#g)'/>` +
+    `<circle cx='${(h >> 3) % 600}' cy='${(h >> 6) % 800}' r='210' fill='none' stroke='rgba(255,255,255,.07)' stroke-width='26'/>` +
+    `<circle cx='${(h >> 9) % 600}' cy='${(h >> 12) % 800}' r='90' fill='none' stroke='rgba(255,255,255,.05)' stroke-width='14'/>` +
+    `<text x='46' y='${ty}' font-size='${fs}' font-weight='800' fill='#F2EFFA' font-family='sans-serif' xml:space='preserve'>${tspan}</text>` +
+    `<text x='46' y='736' font-size='24' font-weight='700' fill='rgba(242,239,250,.85)' font-family='sans-serif'>${esc(curType().name)}${g.year ? " · " + g.year : ""}</text>` +
+    `</svg>`);
+}
+const Cov = { c: {}, get(id) { const g = typeItems()[id]; return g ? (this.c[id] || (this.c[id] = coverURI(g))) : ""; } };
+function imgTag(g) {
+  const cu = S.customCovers[g.id];
+  const src = cu || Cov.get(g.id);
+  return `<img loading="lazy" alt="Обложка: ${esc(g.title)}" src="${src}">`;
+}
+function coverFromFile(file, cb) {
+  const rd = new FileReader();
+  rd.onload = () => {
+    const im = new Image();
+    im.onload = () => {
+      const W = 600, H = 800, cv = document.createElement("canvas");
+      cv.width = W; cv.height = H;
+      const cx = cv.getContext("2d");
+      cx.fillStyle = "#FFFFFF"; cx.fillRect(0, 0, W, H);
+      const sc = Math.min(W / im.width, H / im.height);           // вписать целиком
+      const w = im.width * sc, h = im.height * sc;
+      cx.imageSmoothingQuality = "high";
+      cx.drawImage(im, (W - w) / 2, (H - h) / 2, w, h);
+      cb(cv.toDataURL("image/jpeg", 0.82));
+    };
+    im.onerror = () => toast("Не удалось прочитать изображение");
+    im.src = rd.result;
+  };
+  rd.readAsDataURL(file);
+}
+
+// Модуль 05-cards. Карточки: обе оценки на обложке, теги, кнопки-иконки в один ряд.
+"use strict";
+function cardBadges(g) {
+  const st = g.state || "backlog";
+  let b = "";
+  if (st === "done") b += `<span class="donebadge">${ICON.check}Завершено</span>`;
+  if (st === "active") b += `<span class="rotbadge">${ICON.play}В процессе</span>`;
+  if (st === "dropped") b += `<span class="donebadge dropb">${ICON.drop}Брошено</span>`;
+  if (g.score) b += `<span class="scorebadge" title="Оценка критиков">${ICON.star}${g.score}</span>`;
+  if (S.myScore[g.id]) b += `<span class="myscorebadge" title="Ваша оценка">★ ${S.myScore[g.id]}/10</span>`;
+  return b;
+}
+function cardMeta(g) {
+  const f = curType().fields || [];
+  const parts = [`<span>${esc(curType().name)}</span>`];
+  if (g.year) parts.push(`<span>· ${g.year}</span>`);           // год один раз
+  if (g.creator) parts.push(`<span>· ${esc(g.creator)}</span>`);
+  if (f.includes("score") && g.score) parts.push(`<span class="scoreline">оценка ${g.score}/100</span>`);
+  if (S.myScore[g.id]) parts.push(`<span class="scoreline mine">ваша ${S.myScore[g.id]}/10</span>`);
+  if (g.sizeGb) parts.push(`<span>· ${gb(g.sizeGb)}</span>`);
+  return parts.join("");
+}
+function cardBtns(g) {
+  const st = g.state || "backlog";
+  return `<div class="cardbtns">
+    ${st !== "done" ? `<button class="mini ic ${st === "done" ? "done" : "notdone"}" data-act="done" data-id="${g.id}" title="Завершено" aria-label="Завершено">${ICON.check}</button>` : ""}
+    <button class="mini ic notes" data-act="open" data-id="${g.id}" title="Заметки" aria-label="Заметки">${ICON.pen}</button>
+    <button class="mini ic copy" data-act="copy" data-id="${g.id}" title="Копировать название" aria-label="Копировать">${ICON.copy}</button>
+    <button class="mini ic ${st === "dropped" ? "done" : "notdone"}" data-act="drop" data-id="${g.id}" title="${st === "dropped" ? "Вернуть из брошенных" : "Брошено"}" aria-label="Брошено">${ICON.drop}</button>
+  </div>`;
+}
+function cardInner(g) {
+  const st = g.state || "backlog";
+  const n = (S.notes[g.id] || []).length;
+  const cf = curType().cardFields;
+  const extra = cf
+    ? cf.map(k => g[k]).filter(v => v != null && v !== "").slice(0, 3).map(v => esc(v)).join(" · ")
+    : (curType().fields || [])
+        .filter(k => !["title", "why", "year", "creator", "score", "sizeGb"].includes(k) && g[k] != null && g[k] !== "")
+        .slice(0, 2).map(k => esc(g[k])).join(" · ");
+  return `
+  <div class="covwrap">${imgTag(g)}
+    ${st === "done" ? `<span class="donebadge">${ICON.check}Завершено</span>` : ""}
+    ${st === "active" ? `<span class="rotbadge">${ICON.play}В процессе</span>` : ""}
+    ${st === "dropped" ? `<span class="donebadge dropb">${ICON.drop}Брошено</span>` : ""}
+    ${g.score ? `<span class="scorebadge" title="Оценка критиков">${ICON.star}${g.score}</span>` : ""}
+    ${S.myScore[g.id] ? `<span class="myscorebadge" title="Ваша оценка">★ ${S.myScore[g.id]}/10</span>` : ""}
+    <span class="covertags">${itemTagsHTML(g.id, true)}</span>
+  </div>
+  <div class="cardbody">
+    <div class="ctitle">${esc(g.title)}</div>
+    <div class="cmeta">${cardMeta(g)}</div>
+    ${extra ? `<div class="ctime">${extra}</div>` : ""}
+    <div class="cwhy">${esc(g.why || "")}</div>
+    ${cardBtns(g)}
+  </div>`;
+}
+const cardHTML = g => `<article class="card" data-id="${g.id}" data-act="open">${cardInner(g)}</article>`;
+function tableHTML(g) {
+  const lp = lastPlayDate(g.id);
+  return `<article class="trow ${g.state === "dropped" ? "isdrop" : ""}" data-id="${g.id}" data-act="open">
+    <span class="tt">${esc(g.title)}</span>
+    <span class="ty">${g.year || "—"}</span>
+    <span class="ts">${S.myScore[g.id] ? "★ " + S.myScore[g.id] : "—"}</span>
+    <span class="td">${lp ? fmtPlayDate(lp) : "—"}</span>
+    <span class="th">${sumHours(g.id) ? sumHours(g.id) + " ч" : "—"}</span>
+    <span class="tp">${playCount(g.id)}</span></article>`;
+}
+const compactHTML = g => `<article class="rowitem ${g.state === "dropped" ? "isdrop" : ""}" data-id="${g.id}" data-act="open">
+  <span class="rtitle">${esc(g.title)}</span>
+  <span class="ryear">${g.year || "—"}</span>
+  ${S.myScore[g.id] ? `<span class="rscore">★ ${S.myScore[g.id]}/10</span>` : `<span class="rscore"></span>`}
+  <span class="rtags">${itemTagsHTML(g.id, true)}</span></article>`;
+
+// Дополнение 05-cards: вертикальный список (vcard) для форка.
+function vcardExtra(g) {
+  const cf = curType().cardFields;
+  if (cf) { const v = cf.map(k => g[k]).find(v => v != null && v !== ""); return v == null ? "" : esc(String(v)); }
+  return g.creator ? esc(g.creator) : "";
+}
+function vcardHTML(g) {
+  const st = g.state || "backlog";
+  return `<article class="vcard" data-id="${g.id}" data-act="open">
+  <div class="covwrap">${imgTag(g)}${st === "done" ? `<span class="donebadge">${ICON.check}</span>` : ""}${st === "active" ? `<span class="rotbadge">${ICON.play}</span>` : ""}</div>
+  <div class="vbody"><div class="ctitle">${esc(g.title)}</div>
+  <div class="cmeta"><span>${esc(curType().name)}</span>${g.year ? `<span>· ${g.year}</span>` : ""}${S.myScore[g.id] ? `<span class="scoreline mine">ваша ${S.myScore[g.id]}/10</span>` : ""}</div>
+  <div class="ctime">${vcardExtra(g)}</div>
+  <div class="cwhy">${esc(g.why || "")}</div>
+  ${cardBtns(g)}</div></article>`;
+}
+
+// Модуль 06-list. Рендер списков: grid / vlist / compact (только название+год), фильтр по тегам.
+"use strict";
+let activeTagFilter = [];
+function filteredRows() {
+  let rows = itemsOf(S.view).slice();
+  if (S.q) { const q = S.q.toLowerCase();
+    rows = rows.filter(g => Object.values(g).join(" ").toLowerCase().includes(q)); }
+  if (activeTagFilter.length)
+    rows = rows.filter(g => (S.itemTags[g.id] || []).some(t => activeTagFilter.includes(t)));
+  const cmp = {
+    added: (a, b) => (b.added || 0) - (a.added || 0),
+    title: (a, b) => a.title.localeCompare(b.title, "ru"),
+    score: (a, b) => (S.myScore[b.id] || 0) - (S.myScore[a.id] || 0),
+    year: (a, b) => (b.year || 0) - (a.year || 0),
+    done: (a, b) => (lastPlayDate(b.id) || "").localeCompare(lastPlayDate(a.id) || ""),
+    hours: (a, b) => sumHours(b.id) - sumHours(a.id),
+    plays: (a, b) => playCount(b.id) - playCount(a.id)
+  }[S.sort];
+  return rows.sort(cmp);
+}
+function renderCurrent() {
+  const head = $("#viewhead"), box = $("#listbox"), extra = $("#extra");
+  extra.innerHTML = ""; $("#listbox").innerHTML = "";
+  $("#typeselwrap").style.display = "flex";
+  const rows = filteredRows();
+  $("#count").textContent = rows.length ? `${rows.length} шт.` : "";
+  head.innerHTML = `<h2>${esc(STATE_NAME[S.view])}${S.q ? `: «${esc(S.q)}»` : ""}</h2>
+    <p>${{backlog: "Отложено на потом — из парсера или вручную.", active: "Прямо сейчас читаете, смотрите или играете.", done: "Завершённое: просмотрено, прочитано, пройдено.", dropped: "Брошено — можно вернуться в любой момент."}[S.view]}</p>`;
+  if (S.view === "backlog") {
+    extra.innerHTML = `<div class="dbtns" style="margin-bottom:12px">
+      <button class="btn primary" id="addmine">${ICON.plus}Добавить</button>
+      <button class="btn tonal" id="expmd">${ICON.copy}Экспорт .md</button>
+      <button class="btn tonal" id="expxls">${ICON.copy}Экспорт .xlsx</button></div>`;
+    $("#addmine").onclick = () => openItemForm();
+    $("#expmd").onclick = () => exportListMD();
+    $("#expxls").onclick = () => exportListXLSX();
+  }
+  renderTagFilter(extra);
+  if (!rows.length) {
+    box.innerHTML = `<div class="empty">${ICON.sad}<div>${{backlog: "Пусто. Добавьте что-то в планы — вручную или парсером.", active: "Ничего в процессе. Отметьте элемент из «В планах».", done: "Завершённых пока нет.", dropped: "Брошенных нет — и это прекрасно."}[S.view]}</div></div>`;
+    return;
+  }
+  if (S.layout === "compact") {
+    box.innerHTML = `<div class="rowslist">
+      <div class="rowhead"><span>Название</span><span>Год</span><span>Оценка</span><span>Теги</span></div>
+      ${rows.map(compactHTML).join("")}</div>`;
+    return;
+  }
+  if (S.layout === "table") {
+    const cols = [["title", "Название", ""], ["year", "Год", "right"], ["score", "Оценка", "right"],
+      ["done", "Дата", "right"], ["hours", "Часы", "right"], ["plays", "Кол-во", "center"]];
+    box.innerHTML = `<div class="tablelist">
+      <div class="thead">${cols.map(([k, n, al]) =>
+        `<button class="tcol ${S.sort === k ? "on" : ""}" data-sort="${k}" ${al ? `style="text-align:${al}"` : ""}>${n}</button>`).join("")}</div>
+      ${rows.map(tableHTML).join("")}</div>`;
+    box.querySelector(".thead").onclick = e => { const b = e.target.closest("[data-sort]"); if (!b) return;
+      S.sort = b.dataset.sort; save(); renderCurrent(); };
+    return;
+  }
+  box.innerHTML = S.layout === "grid"
+    ? `<div class="grid">${rows.map(cardHTML).join("")}</div>`
+    : `<div class="vlist">${rows.map(vcardHTML).join("")}</div>`;
+}
+function renderTagFilter(extra) {
+  if (!S.tags.length) return;
+  const wrap = document.createElement("div");
+  wrap.className = "frow";
+  wrap.style.marginBottom = "10px";
+  wrap.innerHTML = `<span class="flabel" style="width:auto">Теги</span><div class="gchips" id="tagfilter">
+    ${S.tags.map(t => `<button class="tagchip-btn ${activeTagFilter.includes(t.id) ? "on" : ""}" data-t="${t.id}">
+      <span class="tagchip sm" style="background:${t.color};border-radius:${{round:"99px",square:"4px",diamond:"2px",flag:"99px 4px 4px 99px"}[tagShape()] || "99px"}">${esc(t.name)}</span></button>`).join("")}
+    ${activeTagFilter.length ? `<button class="linkbtn" id="tagclear">сбросить</button>` : ""}</div>`;
+  extra.appendChild(wrap);
+  wrap.querySelector("#tagfilter").onclick = e => {
+    const b = e.target.closest("[data-t]"); if (!b) return;
+    const t = b.dataset.t;
+    const i = activeTagFilter.indexOf(t);
+    i < 0 ? activeTagFilter.push(t) : activeTagFilter.splice(i, 1);
+    renderCurrent();
+  };
+  const cl = wrap.querySelector("#tagclear");
+  if (cl) cl.onclick = () => { activeTagFilter = []; renderCurrent(); };
+}
+
+// Модуль 07-sheet. Шторка: детали, обе оценки, теги, состояния, заметки, экспорт.
+"use strict";
+let curG = null;
+const fmtPlayDate = d => String(d).split("-").reverse().join(".");
+function playsHTML(id) {
+  const arr = S.playLog[id] || [];
+  if (!arr.length) return `<div class="pempty">Записей нет — добавьте дату ниже.</div>`;
+  return arr.map((p, i) => `<div class="pitem"><span class="pd">${fmtPlayDate(p.d)}</span><span class="ph">${p.h ? p.h + " ч" : "—"}</span>
+    <button data-pdel="${i}" title="Удалить запись">${ICON.trash}</button></div>`).join("");
+}
+function openSheet(id) {
+  const g = typeItems()[id]; if (!g) return; curG = g;
+  const st = g.state || "backlog";
+  const ms = S.myScore[id];
+  const fields = (curType().fields || []).filter(k => !["title", "why", "year"].includes(k) && g[k] != null && g[k] !== "");
+  $("#sheet").innerHTML = `<div class="grabber"></div>
+  <div class="dhead"><div class="covwrap">${imgTag(g)}${st === "done" ? `<span class="donebadge">${ICON.check}Завершено</span>` : ""}${st === "active" ? `<span class="rotbadge">${ICON.play}В процессе</span>` : ""}${st === "dropped" ? `<span class="donebadge dropb">${ICON.drop}Брошено</span>` : ""}${g.score ? `<span class="scorebadge">${ICON.star}${g.score}</span>` : ""}${ms ? `<span class="myscorebadge">★ ${ms}/10</span>` : ""}<span class="covertags">${itemTagsHTML(id, true)}</span></div>
+    <div><h2 class="dtitle">${esc(g.title)} <button class="iconbtn inline" data-act="copy" data-id="${id}" title="Копировать название">${ICON.copy}</button></h2>
+      <div class="dmeta"><span class="tag acc">${esc(curType().name)}</span>${g.year ? `<span class="tag">${g.year}</span>` : ""}
+      ${fields.map(k => `<span class="tag">${esc(g[k])}</span>`).join("")}${ms ? `<span class="tag scoretag">${ICON.star}Моя ${ms}/10</span>` : ""}</div>
+      ${st === "done" ? `<div class="setrow" style="border:none"><div class="sl"><b>Прохождения</b><span>факт — даты и часы; «Ещё проход» добавит сегодня</span></div></div>
+      <div class="plist" id="playlog">${playsHTML(id)}</div>
+      <div class="dbtns" style="margin-top:8px">
+        <input type="date" id="pldate" class="ninput" style="flex:1;min-width:130px" value="${todayISO()}" aria-label="Дата прохождения">
+        <input type="number" id="plhours" class="ninput" style="flex:none;width:92px" min="0" step="0.1" placeholder="часы" aria-label="Часы">
+        <button class="btn tonal" id="pladd" style="flex:none">${ICON.plus}Добавить</button></div>` : ""}
+      <div class="dbtns row">
+        ${st !== "done" ? `<button class="btn done" id="btndone">${ICON.check}Завершено</button>` : `<button class="btn tonal" id="btnplus">${ICON.plus}Ещё проход</button>`}
+        ${st !== "active" ? `<button class="btn rot" id="btnact">${ICON.play}В процесс</button>` : `<button class="btn ghost" id="btnback">${ICON.back}В планы</button>`}
+        <button class="btn ghost" id="btndrop">${ICON.drop}${st === "dropped" ? "Вернуть" : "Брошено"}</button>
+      </div>
+      <div class="dbtns">
+        <button class="btn ghost" id="btnedit">${ICON.edit}Изменить</button>
+        <button class="btn ghost" id="btncov">${ICON.img}Обложка</button>
+        <input type="file" id="covfile" accept="image/jpeg,image/png,image/webp" style="display:none">
+        ${S.customCovers[id] ? `<button class="btn ghost" id="btncovreset">${ICON.trash}Сброс</button>` : ""}
+        <button class="btn ghost" id="btndel" style="color:var(--md-error)">${ICON.trash}Удалить</button>
+      </div></div></div>
+    ${g.why ? `<div class="dwhy"><b>Описание</b>${esc(g.why)}</div>` : ""}
+    <div class="setrow" style="border:none"><div class="sl"><b>Моя оценка</b><span>от 1 до 10</span></div>
+      <select class="m3" id="myscore" style="min-width:120px"><option value="">— не оценено</option>
+      ${[1,2,3,4,5,6,7,8,9,10].map(n => `<option value="${n}" ${ms == n ? "selected" : ""}>★ ${n}/10</option>`).join("")}</select></div>
+    <div class="setrow" style="border:none"><div class="sl"><b>Теги</b><span>нажмите, чтобы назначить/снять</span></div></div>
+    <div class="tchips" id="itemtags">${S.tags.map(t => {
+      const on = (S.itemTags[id] || []).includes(t.id);
+      return `<button class="tchip ${on ? "on" : ""}" data-t="${t.id}" style="${on ? `background:${t.color};border-color:${t.color};color:#fff` : ""}">${esc(t.name)}</button>`;
+    }).join("")} <button class="tchip" id="tnew">+ новый</button></div>
+    <div class="notesec"><h3>${ICON.pen}Заметки (${(S.notes[id] || []).length})</h3>
+      <div class="tchips" id="tpls">${TPL.map((t, i) => `<button class="tchip" data-i="${i}">+ ${esc(t.n)}</button>`).join("")}</div>
+      <div id="nform"></div>
+      <textarea class="note" id="ntext" placeholder="Шаблон создаст поля — или пишите свободно…"></textarea>
+      <div class="dbtns" style="margin-top:9px"><button class="btn primary" id="nadd">${ICON.pen}Добавить заметку</button>
+        <button class="btn md" id="nexpmd">${ICON.copy}Экспорт .md</button>
+        <button class="btn ghost" id="nimpmd">${ICON.pen}Импорт .md</button><input type="file" id="nfile" accept=".md,.markdown,.txt" style="display:none"></div>
+      <div class="notelist" id="nlist"></div></div>`;
+  renderNotes(id);
+  const mv = to => () => { setState(id, to); openSheet(id); renderNav(); renderCurrent(true); };
+  if ($("#btndone")) $("#btndone").onclick = () => { setState(id, "done"); S.plays[id] = Math.max(1, (S.plays[id] || 0)); openSheet(id); renderNav(); renderCurrent(true); };
+  if ($("#btnact")) $("#btnact").onclick = mv("active");
+  if ($("#btnback")) $("#btnback").onclick = mv("backlog");
+  if ($("#btnplus")) $("#btnplus").onclick = () => { addPlay(id, todayISO(), null); toast(`Прохождений: ${playCount(id)}`); openSheet(id); renderCurrent(true); };
+  $("#btndrop").onclick = () => { setState(id, st === "dropped" ? "backlog" : "dropped"); openSheet(id); renderNav(); renderCurrent(true); };
+  $("#btncov").onclick = () => $("#covfile").click();
+  $("#covfile").onchange = e => { const f = e.target.files[0]; if (!f) return;
+    coverFromFile(f, dataUrl => { S.customCovers[id] = dataUrl; save(); toast("Обложка обновлена (600×800, вписана целиком)"); openSheet(id); renderCurrent(true); }); };
+  const covr = $("#btncovreset"); if (covr) covr.onclick = () => { delete S.customCovers[id]; save(); openSheet(id); renderCurrent(true); };
+  $("#btnedit").onclick = () => openItemForm(id);
+  $("#btndel").onclick = () => { delete typeItems()[id]; delete S.notes[id]; delete S.myScore[id]; delete S.customCovers[id]; delete S.itemTags[id]; delete S.playLog[id]; save(); toast("Удалено"); closeSheet(); renderNav(); renderCurrent(); };
+  $("#myscore").onchange = e => { const v = e.target.value; if (v) S.myScore[id] = +v; else delete S.myScore[id]; save(); openSheet(id); renderCurrent(true); };
+  if ($("#playlog")) {
+    $("#playlog").onclick = e => { const b = e.target.closest("[data-pdel]"); if (!b) return;
+      const arr = S.playLog[id]; if (!arr) return;
+      arr.splice(+b.dataset.pdel, 1); if (!arr.length) delete S.playLog[id];
+      save(); openSheet(id); };
+    $("#pladd").onclick = () => { const d = $("#pldate").value;
+      if (!d) { toast("Укажите дату прохождения"); return; }
+      const hv = $("#plhours").value;
+      addPlay(id, d, hv ? +hv : null); toast("Прохождение добавлено"); openSheet(id); };
+  }
+  $("#itemtags").onclick = e => { const b = e.target.closest("[data-t]"); if (b) { toggleItemTag(id, b.dataset.t); openSheet(id); renderCurrent(true); } };
+  const tn = $("#tnew"); if (tn) tn.onclick = () => openTagManager(id);
+  $("#tpls").onclick = e => { const b = e.target.closest(".tchip"); if (!b) return;
+    const tpl = TPL[+b.dataset.i]; const ta = $("#ntext"), form = $("#nform");
+    if (!tpl.fields) { form.innerHTML = ""; ta.style.display = ""; ta.focus(); return; }
+    ta.style.display = "none"; ta.value = "";
+    form.innerHTML = tpl.fields.map(([label, ph]) => `<label class="nfield"><span>${esc(label)}</span><textarea rows="2" placeholder="${esc(ph || "")}"></textarea></label>`).join("");
+    const f1 = form.querySelector("textarea"); if (f1) f1.focus(); };
+  $("#nadd").onclick = () => {
+    const ta = $("#ntext"), form = $("#nform");
+    let text = ""; const fl = form.querySelectorAll("label");
+    if (fl.length) {
+      const parts = [...fl].map(l => [l.querySelector("span").textContent, l.querySelector("textarea").value.trim()]).filter(([, v]) => v);
+      if (!parts.length) { toast("Поля пусты"); return; }
+      text = parts.map(([k, v]) => `${k}\n${v}`).join("\n\n");
+    } else text = ta.value.trim();
+    if (!text) { toast("Заметка пуста"); return; }
+    (S.notes[id] = S.notes[id] || []).unshift({d: Date.now(), t: text}); save();
+    ta.value = ""; form.innerHTML = ""; ta.style.display = "";
+    renderNotes(id); $("#sheet h3").innerHTML = `${ICON.pen}Заметки (${S.notes[id].length})`; toast("Заметка сохранена"); };
+  $("#nexpmd").onclick = () => exportNoteMD(g);
+  $("#nimpmd").onclick = () => $("#nfile").click();
+  $("#nfile").onchange = e => { const f = e.target.files[0]; if (!f) return;
+    const r = new FileReader(); r.onload = () => { importNoteMD(id, String(r.result)); renderNotes(id); }; r.readAsText(f); };
+  $("#scim").classList.add("on"); $("#sheet").classList.add("on");
+  document.body.style.overflow = "hidden";
+}
+function renderNotes(id) {
+  const arr = S.notes[id] || [];
+  $("#nlist").innerHTML = arr.length ? arr.map((n, i) => `<div class="noteitem">
+    <div class="nd">${new Date(n.d).toLocaleString("ru", {day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit"})}</div>${esc(n.t)}
+    <div class="nact"><button data-i="${i}" data-a="e">${ICON.pen}</button><button data-i="${i}" data-a="d">${ICON.trash}</button></div></div>`).join("")
+    : `<div class="nempty">Заметок нет. Шаблон «Сессия» создаст поля автоматически.</div>`;
+  $("#nlist").onclick = e => { const b = e.target.closest("button"); if (!b) return;
+    const i = +b.dataset.i, arr = S.notes[id];
+    if (b.dataset.a === "d") { arr.splice(i, 1); save(); renderNotes(id); }
+    else { const t = arr[i].t; arr.splice(i, 1); save(); renderNotes(id);
+      const ta = $("#ntext"); $("#nform").innerHTML = ""; ta.style.display = ""; ta.value = t; ta.focus(); } };
+}
+function closeSheet() { $("#scim").classList.remove("on"); $("#sheet").classList.remove("on"); document.body.style.overflow = ""; curG = null; }
+
+// Модуль 08-export. Экспорт: заметки .md, весь список .md/.xlsx/.json. Импорт заметок .md.
+"use strict";
+function copyTitle(g) {
+  if (!g) return;
+  const ok = () => toast(`Скопировано: ${g.title}`);
+  if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(g.title).then(ok, () => fallbackCopy(g.title, ok));
+  else fallbackCopy(g.title, ok);
+}
+function fallbackCopy(t, done) { const ta = document.createElement("textarea"); ta.value = t; document.body.appendChild(ta); ta.select();
+  try { document.execCommand("copy"); done(); } catch (e) { toast("Не удалось"); } ta.remove(); }
+function mdFileName(g) {
+  const base = `${g.title} (${g.year || "?"}, ${curType().name})`;
+  return base.replace(/[\\/:*?"<>|]+/g, " ").replace(/\s+/g, " ").trim() + ".md";
+}
+function exportNoteMD(g) {
+  const id = g.id, arr = S.notes[id] || [];
+  if (!arr.length) { toast("Заметок пока нет"); return; }
+  let md = `# ${g.title}\n\n- **Тип:** ${curType().name}\n- **Год:** ${g.year || "—"}`;
+  if (g.creator) md += `\n- **Автор/студия:** ${g.creator}`;
+  if (S.myScore[id]) md += `\n- **Моя оценка:** ${S.myScore[id]}/10`;
+  const pl = S.playLog[id] || [];
+  if (pl.length) md += `\n- **Прохождения:** ${pl.map(p => fmtPlayDate(p.d) + (p.h ? ` (${p.h} ч)` : "")).join("; ")}`;
+  md += `\n\n`;
+  for (const n of arr) md += `## ${new Date(n.d).toLocaleString("ru", {day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit"})}\n\n${n.t}\n\n---\n\n`;
+  window.downloadFile(mdFileName(g), md, "text/markdown");
+  toast(`Сохранено: ${mdFileName(g)}`);
+}
+function importNoteMD(id, text) {
+  const parts = String(text).split(/^## .*/m).slice(1).map(x => x.replace(/---\s*$/m, "").trim()).filter(Boolean);
+  const arr = S.notes[id] = S.notes[id] || [];
+  if (parts.length) for (const p of parts) arr.push({d: Date.now(), t: p});
+  else arr.push({d: Date.now(), t: String(text).trim()});
+  save(); toast(`Импортировано заметок: ${parts.length || 1}`);
+}
+window.downloadFile = (name, content, mime) => {
+  const b64 = btoa(unescape(encodeURIComponent(content)));
+  const a = document.createElement("a");
+  a.href = `data:${mime};charset=utf-8;base64,${b64}#${encodeURIComponent(name)}`;
+  a.download = name; document.body.appendChild(a); a.click(); a.remove();
+};
+/* ── Экспорт списка: .md и .xlsx ── */
+function listRows(state) {
+  const fields = (curType().fields || []).filter(k => k !== "why");
+  const rows = itemsOf(state).map(g => {
+    const tags = itemTags(g.id).map(t => t.name).join(", ");
+    const r = [g.title];
+    for (const k of fields) r.push(g[k] != null ? String(g[k]) : "");
+    r.push(S.myScore[g.id] ? S.myScore[g.id] + "/10" : "");
+    r.push(String(playCount(g.id)));
+    const lp = lastPlayDate(g.id);
+    r.push(lp ? fmtPlayDate(lp) : "");
+    r.push(sumHours(g.id) ? String(sumHours(g.id)) : "");
+    r.push(tags);
+    return r;
+  });
+  const head = ["Название", ...fields.map(k => fieldLabel(k).replace("*", "")), "Моя оценка", "Прохождений", "Последнее прохождение", "Часы", "Теги"];
+  return [head, ...rows];
+}
+function exportListMD() {
+  const rows = listRows(S.view);
+  if (rows.length <= 1) { toast("Список пуст"); return; }
+  const [h, ...body] = rows;
+  let md = `# ${curType().name} — ${STATE_NAME[S.view]}\n\n`;
+  md += `| ${h.join(" | ")} |\n| ${h.map(() => "---").join(" | ")} |\n`;
+  for (const r of body) md += `| ${r.map(c => c.replace(/\|/g, "\\|")).join(" | ")} |\n`;
+  const name = `${curType().name} - ${STATE_NAME[S.view]}.md`.replace(/[\\/:*?"<>|]+/g, " ");
+  window.downloadFile(name, md, "text/markdown");
+  toast(`Экспортировано строк: ${body.length}`);
+}
+/* Мини-XLSX (zip STORE, без сжатия) */
+const CRC_TABLE = (() => { const t = []; for (let n = 0; n < 256; n++) { let c = n;
+  for (let k = 0; k < 8; k++) c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1; t[n] = c >>> 0; } return t; })();
+function crc32(buf) { let c = 0xFFFFFFFF; for (let i = 0; i < buf.length; i++) c = CRC_TABLE[(c ^ buf[i]) & 0xFF] ^ (c >>> 8); return (c ^ 0xFFFFFFFF) >>> 0; }
+function makeZip(files) {
+  const enc = new TextEncoder(); const parts = []; const central = []; let offset = 0;
+  const u16 = v => [v & 255, (v >> 8) & 255]; const u32 = v => [v & 255, (v >> 8) & 255, (v >> 16) & 255, (v >>> 24) & 255];
+  for (const [name, content] of files) {
+    const nb = enc.encode(name), cb = typeof content === "string" ? enc.encode(content) : content;
+    const crc = crc32(cb); const o = offset;
+    parts.push(new Uint8Array([80, 75, 3, 4, ...u16(20), ...u16(0), ...u16(0), ...u16(0), ...u16(0), ...u32(crc), ...u32(cb.length), ...u32(cb.length), ...u16(nb.length), ...u16(0), ...nb]));
+    parts.push(cb);
+    central.push({nb, cb, crc, o});
+    offset += 30 + nb.length + cb.length;
+  }
+  const cdStart = offset; let cdLen = 0;
+  for (const {nb, cb, crc, o} of central) {
+    parts.push(new Uint8Array([80, 75, 1, 2, ...u16(20), ...u16(20), ...u16(0), ...u16(0), ...u16(0), ...u16(0), ...u32(crc), ...u32(cb.length), ...u32(cb.length), ...u16(nb.length), ...u16(0), ...u16(0), ...u16(0), ...u16(0), ...u32(0), ...u32(o), ...nb]));
+    cdLen += 46 + nb.length;
+  }
+  parts.push(new Uint8Array([80, 75, 5, 6, ...u16(0), ...u16(0), ...u16(central.length), ...u16(central.length), ...u32(cdLen), ...u32(cdStart), ...u16(0)]));
+  const total = parts.reduce((a, p) => a + p.length, 0);
+  const out = new Uint8Array(total); let p = 0;
+  for (const x of parts) { out.set(x, p); p += x.length; }
+  return out;
+}
+function exportListXLSX() {
+  const rows = listRows(S.view);
+  if (rows.length <= 1) { toast("Список пуст"); return; }
+  const escXml = t => String(t).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+  const cell = (v, r, c) => `<c r="${String.fromCharCode(65 + c) + (r + 1)}" t="inlineStr"><is><t xml:space="preserve">${escXml(v)}</t></is></c>`;
+  const sheetData = rows.map((row, ri) => `<row r="${ri + 1}">${row.map((v, ci) => cell(v, ri, ci)).join("")}</row>`).join("");
+  const files = [
+    ["[Content_Types].xml", `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/></Types>`],
+    ["_rels/.rels", `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>`],
+    ["xl/workbook.xml", `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets><sheet name="${escXml(curType().name).slice(0, 28)}" sheetId="1" r:id="rId1"/></sheets></workbook>`],
+    ["xl/_rels/workbook.xml.rels", `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/></Relationships>`],
+    ["xl/worksheets/sheet1.xml", `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetData>${sheetData}</sheetData></worksheet>`]
+  ];
+  const xlsx = makeZip(files);
+  const b64 = btoa(String.fromCharCode(...xlsx));
+  const name = `${curType().name} - ${STATE_NAME[S.view]}.xlsx`.replace(/[\\/:*?"<>|]+/g, " ");
+  const a = document.createElement("a");
+  a.href = "data:application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;base64," + b64 + "#" + encodeURIComponent(name);
+  a.download = name; document.body.appendChild(a); a.click(); a.remove();
+  toast(`Экспортировано строк: ${rows.length - 1}`);
+}
+
+// Модуль 09-stats. Статистика по прогрессии: проценты, несколько прохождений.
+"use strict";
+function openStats() {
+  const rows = STATE_ORDER.map(st => {
+    const n = itemsOf(st).length;
+    return {st, n};
+  });
+  const total = allOfType().length || 1;
+  const doneN = itemsOf("done").length;
+  const playsSum = itemsOf("done").reduce((s, g) => s + Math.max(1, playCount(g.id)), 0);
+  const hoursSum = itemsOf("done").reduce((s, g) => s + sumHours(g.id), 0);
+  const donePct = Math.round(doneN / total * 100);
+  const activePct = Math.round(itemsOf("active").length / total * 100);
+  const bar = (label, n, pct, cls) => `<div class="statrow"><span class="statlb">${esc(label)}</span>
+    <div class="bar"><div class="fill ${cls || ""}" style="width:${pct}%"></div></div>
+    <span class="statn">${n} · ${pct}%</span></div>`;
+  $("#sheet").innerHTML = `<div class="grabber"></div><h2 class="dtitle">Статистика — ${esc(curType().name)}</h2>
+    <div class="intro">Всего в типе «${esc(curType().name)}»: <b>${allOfType().length}</b>.
+    Завершено <b>${doneN}</b> (${donePct}%) с учётом повторных прохождений — <b>${playsSum}</b> · <b>${hoursSum} ч</b>.</div>
+    ${bar("В планах", rows[0].n, Math.round(rows[0].n / total * 100))}
+    ${bar("В процессе", rows[1].n, activePct)}
+    ${bar("Завершено", doneN, donePct, "ok")}
+    ${bar("Брошено", rows[3].n, Math.round(rows[3].n / total * 100), "hot")}
+    <div class="setrow"><div class="sl"><b>Прохождения/просмотры</b><span>у завершённых: кнопка «Ещё проход» добавляет повтор; часы — в шторке</span></div>
+      <span class="tag acc">${playsSum} · ${hoursSum} ч</span></div>
+    <div class="menurows">${S.types.map(t => {
+      const arr = Object.values(S.items[t.name] || {});
+      const dn = arr.filter(x => (x.state || "backlog") === "done").length;
+      const pc = arr.length ? Math.round(dn / arr.length * 100) : 0;
+      return `<div class="statrow"><span class="statlb">${esc(t.name)}</span>
+        <div class="bar"><div class="fill" style="width:${pc}%"></div></div><span class="statn">${dn}/${arr.length} · ${pc}%</span></div>`;
+    }).join("")}</div>`;
+  $("#scim").classList.add("on"); $("#sheet").classList.add("on");
+  document.body.style.overflow = "hidden";
+}
+
+// Модуль 10-types. Типы медиа: список, редактирование, переработанное создание.
+"use strict";
+function fieldLabel(k) {
+  const map = {title: "Название*", year: "Год", creator: "Автор / студия", studio: "Студия", country: "Страна",
+    platform: "Платформа", director: "Режиссёр", author: "Автор", artist: "Художник", seasons: "Сезонов",
+    episodes: "Эпизодов / глав", volumes: "Томов", pages: "Страниц", duration: "Длительность",
+    score: "Оценка критиков", sizeGb: "Объём, ГБ"};
+  return map[k] || k;
+}
+function openTypeManager(editIndex) {
+  const editing = editIndex != null;
+  const t = editing ? S.types[editIndex] : null;
+  $("#sheet").innerHTML = `<div class="grabber"></div>
+  <h2 class="dtitle">${editing ? "Изменить тип медиа" : "Типы медиа"}</h2>
+  ${editing ? `
+    <label class="nfield"><span>Название типа</span><input class="ninput" id="tname" value="${esc(t.name)}"></label>
+    <div class="flabel" style="margin:8px 0 6px">Поля карточки (в порядке отображения)</div>
+    <div class="menurows" id="tflds">${t.fields.map((k, i) => k === "title" || k === "why" ? "" :
+      `<div class="setrow"><label class="switch"><input type="checkbox" data-f="${k}" checked><span class="tr"></span><span class="th"></span></label>
+       <div class="sl"><b>${esc(fieldLabel(k))}</b><span>${k}</span></div></div>`).join("")}
+      <div class="setrow"><div class="sl"><b>Добавить поле</b></div>
+        <select class="m3" id="taddfield">${Object.keys(FIELD_LIB).filter(k => k !== "title" && k !== "why" && !t.fields.includes(k)).map(k => `<option value="${k}">${esc(fieldLabel(k))}</option>`).join("")}</select>
+        <button class="btn tonal" id="taddbtn">${ICON.plus}</button></div>
+    </div>
+    <div class="flabel" style="margin:8px 0 6px">Поля на плитке карточки</div>
+    <div class="menurows" id="tcards">${t.fields.filter(k => k !== "title" && k !== "why").map(k => {
+      const on = (t.cardFields || []).includes(k);
+      const pos = (t.cardFields || []).indexOf(k);
+      return `<div class="setrow"><label class="switch"><input type="checkbox" data-cf="${k}" ${on ? "checked" : ""}><span class="tr"></span><span class="th"></span></label>
+       <div class="sl"><b>${esc(fieldLabel(k))}</b><span>${on ? "на карточке · " + (pos + 1) : "не показывать"}</span></div>
+       <button class="btn tonal" data-cfup="${k}" ${on ? "" : "disabled"}>↑</button>
+       <button class="btn tonal" data-cfdown="${k}" ${on ? "" : "disabled"}>↓</button></div>`;
+    }).join("")}</div>
+    <div class="hint" style="margin-top:4px">Ничего не выбрано — на плитке поля показываются как раньше (авто).</div>
+    <div class="dbtns"><button class="btn primary" id="tsave">${ICON.check}Сохранить</button>
+      <button class="btn ghost" id="tcancel">Отмена</button>
+      <button class="btn ghost" id="tdel" style="color:var(--md-error)">${ICON.trash}Удалить тип</button></div>`
+  : `
+    <div class="intro">Выберите шаблон и при желании задайте своё имя. Поля можно менять после создания.</div>
+    <div class="menugrid" id="presets">${TYPE_PRESETS.map((p, i) => `<button class="menucard ${p.name === "Игры" ? "on" : ""}" data-i="${i}">
+      <span class="mtxt">${esc(p.name)}</span><span class="mcnt">${p.fields.length}</span></button>`).join("")}</div>
+    <label class="nfield" style="margin-top:10px"><span>Своё название типа (необязательно)</span>
+      <input class="ninput" id="newname" placeholder="например: Подкасты"></label>
+    <div class="dbtns"><button class="btn primary" id="tcreate">${ICON.plus}Добавить тип</button>
+      <button class="btn ghost" id="tcancel">Готово</button></div>`}`;
+  $("#tcancel").onclick = () => { closeSheet(); renderNav(); renderTypes(); renderCurrent(); };
+  if (editing) {
+    $("#tcards").onchange = e => {
+      const box = e.target.closest("input[data-cf]"); if (!box) return;
+      const k = box.dataset.cf;
+      t.cardFields = t.cardFields || [];
+      const i = t.cardFields.indexOf(k);
+      if (box.checked && i < 0) t.cardFields.push(k);
+      if (!box.checked && i >= 0) t.cardFields.splice(i, 1);
+      if (!t.cardFields.length) delete t.cardFields;
+      save(); openTypeManager(editIndex);
+    };
+    $("#tcards").onclick = e => {
+      const up = e.target.closest("[data-cfup]"), dn = e.target.closest("[data-cfdown]");
+      if (!up && !dn) return;
+      const k = up ? up.dataset.cfup : dn.dataset.cfdown;
+      const arr = t.cardFields || [];
+      const i = arr.indexOf(k), j = up ? i - 1 : i + 1;
+      if (i < 0 || j < 0 || j >= arr.length) return;
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+      save(); openTypeManager(editIndex);
+    };
+    $("#tsave").onclick = () => {
+      const nm = $("#tname").value.trim();
+      if (!nm) { toast("Введите название типа"); return; }
+      const oldName = t.name;
+      const keep = [...$("#tflds").querySelectorAll("input:checked")].map(x => x.dataset.f);
+      t.fields = ["title", ...keep, "why"];
+      if (t.cardFields) { t.cardFields = t.cardFields.filter(k => t.fields.includes(k)); if (!t.cardFields.length) delete t.cardFields; }
+      if (nm !== oldName) { S.items[nm] = S.items[oldName] || {}; delete S.items[oldName]; t.name = nm; if (S.type === editIndex) { } }
+      save(); closeSheet(); renderTypes(); renderNav(); renderCurrent(); toast("Тип обновлён");
+    };
+    $("#taddbtn").onclick = () => {
+      const k = $("#taddfield").value; if (!k) return;
+      if (!t.fields.includes(k)) t.fields.splice(t.fields.length - 1, 0, k);
+      save(); openTypeManager(editIndex);
+    };
+    $("#tdel").onclick = () => {
+      if (S.types.length <= 1) { toast("Должен остаться хотя бы один тип"); return; }
+      S.types.splice(editIndex, 1); if (S.type >= S.types.length) S.type = 0;
+      save(); closeSheet(); renderTypes(); renderNav(); renderCurrent(); toast("Тип удалён (данные сохранены)");
+    };
+  } else {
+    let chosen = 0;
+    $("#presets").onclick = e => { const b = e.target.closest(".menucard"); if (!b) return;
+      [...$("#presets").children].forEach(x => x.classList.remove("on")); b.classList.add("on"); chosen = +b.dataset.i; };
+    $("#tcreate").onclick = () => {
+      const preset = TYPE_PRESETS[chosen];
+      const nm = $("#newname").value.trim() || preset.name;
+      if (S.types.some(t => t.name === nm)) { toast("Такой тип уже есть"); return; }
+      S.types.push({name: nm, fields: [...preset.fields]});
+      S.type = S.types.length - 1; save(); closeSheet(); renderTypes(); renderNav(); renderCurrent();
+      toast(`Тип «${nm}» добавлен`);
+    };
+  }
+  $("#scim").classList.add("on"); $("#sheet").classList.add("on");
+  document.body.style.overflow = "hidden";
+}
+
+// Модуль 11-boot. Форма элемента (с парсером), настройки, применение темы, инициализация.
+"use strict";
+function openItemForm(id) {
+  const g = id ? typeItems()[id] : null;
+  const fields = (curType().fields || []).filter(k => k !== "why");
+  window.__parsedCover = g && S.customCovers[id] ? S.customCovers[id] : null;
+  $("#sheet").innerHTML = `<div class="grabber"></div><h2 class="dtitle">${g ? "Изменить — " + esc(curType().name) : "Добавить — " + esc(curType().name)}</h2>
+    <div class="fbody" style="padding:0">
+      <label class="nfield"><span>Парсер: ссылка на Steam / Kinopoisk / MyAnimeList / любой сайт</span>
+        <div class="frow" style="flex-wrap:nowrap"><input class="ninput" id="curl" placeholder="https://…" style="flex:1">
+        <button class="btn tonal" id="cparse" style="flex:none">Заполнить</button></div>
+        <span class="hint" id="cparsest" style="font-weight:400"></span></label>
+      ${fields.map(k => `<label class="nfield"><span>${esc(fieldLabel(k))}</span><input class="ninput" data-k="${k}" value="${g && g[k] != null ? esc(String(g[k])) : ""}"></label>`).join("")}
+      <label class="nfield"><span>Описание</span><textarea id="cwhy" rows="3">${g ? esc(g.why || "") : ""}</textarea></label>
+    </div>
+    <div class="dbtns"><button class="btn primary" id="csave">${ICON.check}Сохранить</button><button class="btn ghost" id="ccancel">Отмена</button></div>`;
+  $("#ccancel").onclick = () => { closeSheet(); if (id) openSheet(id); };
+  $("#cparse").onclick = async () => {
+    const url = $("#curl").value.trim(); const st = $("#cparsest");
+    if (!url) { st.textContent = "Вставьте ссылку"; return; }
+    st.textContent = "Загружаю через парсер…";
+    try {
+      const info = await parsePage(url);
+      const set = (k, v) => { const el = $("#sheet").querySelector(`[data-k="${k}"]`); if (el && v) el.value = v; };
+      set("title", info.title); set("year", info.year); set("creator", info.creator); set("duration", info.duration);
+      $("#cwhy").value = info.why || $("#cwhy").value;
+      if (info.cover) { window.__parsedCover = info.cover; st.textContent = "Найдено: " + (info.title || "данные") + " — проверьте поля, обложка приложится"; }
+      else st.textContent = "Страница открыта — недостающее заполните вручную";
+    } catch (e) { st.textContent = "Парсер недоступен (" + e.message + ") — заполните вручную"; }
+  };
+  $("#csave").onclick = () => {
+    const title = $("#sheet").querySelector('[data-k="title"]').value.trim();
+    if (!title) { toast("Введите название"); return; }
+    const nid = id || ("u" + Date.now().toString(36));
+    const arr = S.items[curType().name] = S.items[curType().name] || {};
+    if (window.__parsedCover) S.customCovers[nid] = window.__parsedCover;
+    const item = {id: nid, title, state: id ? (g.state || "backlog") : (S.view === "dropped" ? "backlog" : S.view || "backlog"), added: (g && g.added) || Date.now(), why: $("#cwhy").value.trim()};
+    for (const k of fields) { const v = $("#sheet").querySelector(`[data-k="${k}"]`).value.trim(); if (v) item[k] = !isNaN(+v) && k !== "duration" && k !== "title" ? +v : v; }
+    arr[nid] = item; save();
+    toast(id ? "Обновлено" : "Добавлено"); closeSheet(); renderNav(); renderCurrent(true);
+  };
+  $("#scim").classList.add("on"); $("#sheet").classList.add("on");
+  document.body.style.overflow = "hidden";
+}
+function openSettings() {
+  $("#sheet").innerHTML = `<div class="grabber"></div><h2 class="dtitle" style="margin-bottom:14px">Настройки</h2>
+  <div class="setrow"><div class="sl"><b>Тема</b></div>
+    <select class="m3" id="stheme"><option value="dark" ${S.theme === "dark" ? "selected" : ""}>Тёмная</option><option value="light" ${S.theme === "light" ? "selected" : ""}>Светлая</option></select></div>
+  <div class="setrow"><div class="sl"><b>Типы медиа</b><span>включение, отключение, редактирование, свои типы</span></div>
+    <button class="btn tonal" id="stypes">Настроить</button></div>
+  <div class="setrow"><div class="sl"><b>Теги</b><span>создание, редактирование, цвета</span></div>
+    <button class="btn tonal" id="stags">Настроить</button></div>
+  <div class="setrow"><div class="sl"><b>Сортировка списков</b></div>
+    <select class="m3" id="ssort"><option value="added" ${S.sort === "added" ? "selected" : ""}>По добавлению</option><option value="title" ${S.sort === "title" ? "selected" : ""}>По названию</option><option value="score" ${S.sort === "score" ? "selected" : ""}>По моей оценке</option><option value="done" ${S.sort === "done" ? "selected" : ""}>По дате прохождения</option><option value="year" ${S.sort === "year" ? "selected" : ""}>По годам</option></select></div>
+  <div class="setrow"><div class="sl"><b>Вид карточек</b><span>сетка / список / компактный / таблица</span></div>
+    <div class="modeseg" id="slayout"><button data-l="grid" aria-pressed="${S.layout === "grid"}">Сетка</button><button data-l="list" aria-pressed="${S.layout === "list"}">Список</button><button data-l="compact" aria-pressed="${S.layout === "compact"}">Компакт</button><button data-l="table" aria-pressed="${S.layout === "table"}">Таблица</button></div></div>
+  <div class="setrow"><div class="sl"><b>Резервная копия</b><span>всё состояние в JSON</span></div>
+    <button class="btn tonal" id="sexp">Экспорт</button><button class="btn ghost" id="simp">Импорт</button><input type="file" id="sfile" accept=".json" style="display:none"></div>
+  <div class="setrow"><div class="sl"><b>О приложении</b><span>Медиа дневник v1.2 · офлайн · парсер по ссылке · .md и .xlsx · прохождения и таблица</span></div></div>`;
+  $("#stheme").onchange = e => { S.theme = e.target.value; save(); applyTheme(); };
+  $("#ssort").onchange = e => { S.sort = e.target.value; save(); renderCurrent(); };
+  $("#stypes").onclick = () => openTypeManager();
+  $("#stags").onclick = () => openTagManager();
+  $("#slayout").onclick = e => { const b = e.target.closest("button"); if (!b) return; S.layout = b.dataset.l; save(); openSettings(); renderCurrent(); };
+  $("#sexp").onclick = () => window.downloadFile("media-diary-backup.json", JSON.stringify(S, null, 1), "application/json");
+  $("#simp").onclick = () => $("#sfile").click();
+  $("#sfile").onchange = e => { const f = e.target.files[0]; if (!f) return;
+    const r = new FileReader(); r.onload = () => { try { const o = JSON.parse(r.result); S = Object.assign({}, DEF, o);
+      save(); toast("Импортировано"); closeSheet(); renderAll(); } catch (x) { toast("Файл не распознан"); } }; r.readAsText(f); };
+  $("#scim").classList.add("on"); $("#sheet").classList.add("on");
+  document.body.style.overflow = "hidden";
+}
+function applyTheme() {
+  document.documentElement.dataset.theme = S.theme === "light" ? "light" : "dark";
+  document.querySelector('meta[name="theme-color"]').content = S.theme === "light" ? "#FCF8FF" : "#121318";
+}
+
+// Модуль 12-boot. Инициализация: каркас, навигация, типы, делегирование, свайп, назад.
+"use strict";
+function renderNav() {
+  $("#nav").innerHTML = STATE_ORDER.map(k => {
+    const cnt = itemsOf(k).length;
+    return `<button class="tabitem ${S.view === k ? "on" : ""}" data-nav="${k}"><span class="nic">${STATE_ICON[k]}</span><span class="nlb">${STATE_NAME[k]}${cnt ? ` · ${cnt}` : ""}</span></button>`;
+  }).join("");
+}
+function renderTypes() {
+  $("#typeselwrap").innerHTML = `<span class="flabel" style="width:auto">Тип</span>
+    <select class="m3" id="typesel" aria-label="Тип медиа">${S.types.map((t, i) => `<option value="${i}" ${S.type === i ? "selected" : ""}>${esc(t.name)}</option>`).join("")}</select>
+    <button class="iconbtn inline" id="typemgr" title="Типы медиа">${ICON.menu}</button>`;
+  $("#typesel").onchange = e => { S.type = +e.target.value; activeTagFilter = []; save(); renderCurrent(); };
+  $("#typemgr").onclick = () => openTypeManager();
+}
+function renderAll() { renderNav(); renderTypes(); renderCurrent(); }
+function setView(v) { S.view = v; S.q = $("#q").value = ""; activeTagFilter = []; save(); renderNav(); renderTypes(); renderCurrent(); scrollTo({top: 0}); }
+if (location.search.includes("reset=1") && location.hash !== "#cleared") {
+  try { localStorage.removeItem("md1.state"); } catch (e) {}
+  location.hash = "#cleared";
+  location.reload();
+} else {
+function boot() {
+  document.getElementById("app").innerHTML = `
+  <header class="topbar">
+    <h1>Медиа <b>дневник</b></h1><div class="spacer"></div>
+    <button class="iconbtn" id="bstats" title="Статистика" aria-label="Статистика">${ICON.stats}</button>
+    <button class="iconbtn" id="bset" title="Настройки" aria-label="Настройки"><svg viewBox="0 0 24 24"><path d="M19.14 12.94a7.07 7.07 0 0 0 .05-.94 7.07 7.07 0 0 0-.05-.94l2.03-1.58a.5.5 0 0 0 .12-.64l-1.92-3.32a.5.5 0 0 0-.61-.22l-2.39.96a7.03 7.03 0 0 0-1.62-.94l-.36-2.54A.5.5 0 0 0 13.9 2h-3.8a.5.5 0 0 0-.49.42l-.36 2.54c-.59.24-1.13.56-1.62.94l-2.39-.96a.5.5 0 0 0-.61.22L2.71 8.84a.5.5 0 0 0 .12.64l2.03 1.58a7.07 7.07 0 0 0 0 1.88l-2.03 1.58a.5.5 0 0 0-.12.64l1.92 3.32c.14.24.42.34.61.22l2.39-.96c.49.38 1.03.7 1.62.94l.36 2.54a.5.5 0 0 0 .49.42h3.8a.5.5 0 0 0 .49-.42l.36-2.54a7.03 7.03 0 0 0 1.62-.94l2.39.96c.23.09.47 0 .61-.22l1.92-3.32a.5.5 0 0 0-.12-.64zM12 15.6A3.6 3.6 0 1 1 15.6 12 3.6 3.6 0 0 1 12 15.6z"/></svg></button>
+    <div class="searchbox wide"><svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27a6.5 6.5 0 1 0-.7.7l.27.28v.79l5 4.99L20.49 19zm-6 0A4.5 4.5 0 1 1 14 9.5 4.5 4.5 0 0 1 9.5 14z"/></svg>
+      <input id="q" type="search" placeholder="Поиск…" aria-label="Поиск"></div>
+  </header>
+  <nav class="tabbar" id="nav" aria-label="Состояния"></nav>
+  <main>
+    <div id="typeselwrap" class="frow" style="margin-bottom:10px"></div>
+    <div class="viewhead" id="viewhead"></div>
+    <div id="extra"></div>
+    <div class="headrow"><span class="grow"></span><span id="count" style="font-size:13px;color:var(--on-surface-var);font-weight:700"></span></div>
+    <div id="listbox"></div>
+  </main>
+  <div class="footer-note">Полностью офлайн · заметки в .md · экспорт .md/.xlsx · своя оценка и обложка · парсер по ссылке</div>
+  <div id="scim" class="scim"></div><div id="sheet" class="sheet" role="dialog" aria-modal="true"></div>
+  <div id="toast"></div>`;
+  const q = $("#q");
+  let qt; q.addEventListener("input", () => { clearTimeout(qt); qt = setTimeout(() => { S.q = q.value.trim(); renderCurrent(); }, 250); });
+  $("#bset").onclick = openSettings;
+  $("#bstats").onclick = openStats;
+  $("#scim").onclick = closeSheet;
+  document.addEventListener("keydown", e => { if (e.key === "Escape") closeSheet(); });
+  $("#nav").onclick = e => { const c = e.target.closest("[data-nav]"); if (c) setView(c.dataset.nav); };
+  document.getElementById("app").addEventListener("click", e => {
+    const b = e.target.closest("[data-act]"); if (!b || e.target.closest("a")) return;
+    const id = b.dataset.id; const g = typeItems()[id];
+    if (b.dataset.act === "open") openSheet(id);
+    else if (b.dataset.act === "copy") { e.stopPropagation(); copyTitle(g); }
+    else if (b.dataset.act === "done") { e.stopPropagation(); setState(id, "done"); S.plays[id] = Math.max(1, S.plays[id] || 1); renderNav(); renderCurrent(true); }
+    else if (b.dataset.act === "drop") { e.stopPropagation(); setState(id, (g.state || "backlog") === "dropped" ? "backlog" : "dropped"); renderNav(); renderCurrent(true); }
+    else if (b.dataset.act === "moveactive") { e.stopPropagation(); setState(id, "active"); renderNav(); renderCurrent(true); }
+  });
+  const sh = $("#sheet"); let sy = 0, dy = 0, drag = false;
+  sh.addEventListener("touchstart", e => { if (sh.scrollTop > 2) return; sy = e.touches[0].clientY; dy = 0; drag = true; sh.classList.add("sheet-dragging"); }, {passive: true});
+  sh.addEventListener("touchmove", e => { if (!drag) return; dy = Math.max(0, e.touches[0].clientY - sy); if (dy) { sh.style.transform = `translateY(${dy}px)`; sh.style.opacity = String(1 - Math.min(.5, dy / 600)); } }, {passive: true});
+  sh.addEventListener("touchend", () => { if (!drag) return; drag = false; sh.classList.remove("sheet-dragging"); sh.style.transform = ""; sh.style.opacity = ""; if (dy > 110) closeSheet(); }, {passive: true});
+  /* ── Свайп между вкладками состояний (как в Telegram), порог против скролла ── */
+  const lb = $("#listbox");
+  let tsx = 0, tsy = 0, tdx = 0, tdy = 0, tabDrag = false;
+  lb.addEventListener("touchstart", e => { const t = e.touches[0]; tsx = t.clientX; tsy = t.clientY; tdx = 0; tdy = 0; tabDrag = true; }, {passive: true});
+  lb.addEventListener("touchmove", e => { if (!tabDrag) return; const t = e.touches[0]; tdx = t.clientX - tsx; tdy = t.clientY - tsy; }, {passive: true});
+  lb.addEventListener("touchend", () => {
+    if (!tabDrag) return; tabDrag = false;
+    if (Math.abs(tdx) < 60 || Math.abs(tdx) <= 2 * Math.abs(tdy)) return;
+    const i = STATE_ORDER.indexOf(S.view);
+    if (i < 0) return;
+    const j = tdx < 0 ? (i + 1) % STATE_ORDER.length : (i + STATE_ORDER.length - 1) % STATE_ORDER.length;
+    lb.classList.add(tdx < 0 ? "swipe-l" : "swipe-r");
+    setTimeout(() => { lb.classList.remove("swipe-l", "swipe-r"); setView(STATE_ORDER[j]); }, 140);
+  }, {passive: true});
+  window.__back = function () { if ($("#sheet").classList.contains("on")) { closeSheet(); return "1"; } return "0"; };
+  applyTheme(); renderAll();
+}
+window.addEventListener("DOMContentLoaded", boot);
+window.QA = {
+  get S() { return S; }, set S(v) { S = v; },
+  get IDX() { return null; },
+  setView, renderNav, renderCurrent, renderTypes, save, parsePage, openItemForm, openTypeManager,
+  openStats, openSheet, closeSheet, exportListMD, exportListXLSX, importNoteMD, exportNoteMD,
+  setState, itemsOf, filteredRows, toggleItemTag, createTag, deleteTag, stateOf,
+  addPlay, playCount, lastPlayDate, sumHours, todayISO
+};
+}
+
+</script>
+</body>
+</html>

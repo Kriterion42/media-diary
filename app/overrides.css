@@ -1,0 +1,113 @@
+/* Медиа дневник — стилевые дополнения (v1.1). Единый стиль M3, без касаний элементов. */
+
+/* ── Обложка: целиком, с подложкой, углы не касаются карточки ── */
+.covwrap{padding:8px 8px 6px;background:linear-gradient(160deg,var(--sc-3),var(--sc-2))}
+.covwrap img{object-fit:contain;border-radius:12px;box-shadow:0 1px 4px rgba(0,0,0,.35)}
+.covwrap{aspect-ratio:3/4}
+.vcard .covwrap{aspect-ratio:3/4}
+.scorebadge svg,.myscorebadge svg{width:11px;height:11px;vertical-align:-1px}
+.myscorebadge{position:absolute;bottom:9px;right:9px;background:#3D5A3F;color:#D3F8BC;border-radius:10px;padding:2px 8px;font-size:11px;font-weight:800}
+.scorebadge{top:9px;right:9px}
+.scoreline.mine{color:#B7E3A0}
+.donebadge.dropb{background:var(--md-tertiary-container);color:var(--md-tertiary)}
+
+/* ── Теги ── */
+.tagchip{display:inline-block;color:#14141A;font-weight:800;font-size:11px;padding:2px 8px;line-height:1.4}
+.tagchip.sm{font-size:9.5px;padding:1px 6px}
+.tagchip-btn{border:none;background:transparent;cursor:pointer;padding:2px}
+.tagchip-btn.on .tagchip{outline:2px solid var(--md-primary);outline-offset:1px}
+.covertags{position:absolute;bottom:30px;left:8px;display:flex;flex-wrap:wrap;gap:3px;max-width:calc(100% - 16px)}
+.rtags{display:flex;gap:3px;flex-wrap:wrap;justify-content:flex-end}
+
+/* ── Компактный вид: только название и год ── */
+.rowslist{display:grid;gap:6px}
+.rowitem{display:grid;grid-template-columns:1fr 52px 64px auto;gap:10px;align-items:center;
+  background:var(--sc-2);border:1px solid var(--outline-var);border-radius:12px;padding:9px 13px;cursor:pointer;
+  transition:transform var(--dur-2) var(--ease-spring)}
+.rowitem:hover{transform:translateY(-1px)}
+.rowitem.isdrop{opacity:.6}
+.rtitle{font-weight:700;font-size:13.5px;overflow-wrap:anywhere}
+.ryear{color:var(--on-surface-var);font-size:12.5px;text-align:right}
+.rscore{color:var(--md-primary);font-weight:800;font-size:12px;text-align:right}
+.rowhead{display:grid;grid-template-columns:1fr 52px 64px auto;gap:10px;padding:0 13px;
+  color:var(--on-surface-var);font-size:10.5px;font-weight:800;text-transform:uppercase;letter-spacing:.5px}
+
+/* ── Статистика ── */
+.statrow{display:grid;grid-template-columns:110px 1fr auto;gap:10px;align-items:center;margin-bottom:10px}
+.statlb{font-size:13px;font-weight:700;color:var(--on-surface-var)}
+.statn{font-size:12.5px;color:var(--on-surface-var);font-weight:700;white-space:nowrap}
+.bar{height:10px;background:var(--sc-3);border-radius:99px;overflow:hidden}
+.bar .fill{height:100%;background:var(--md-primary);border-radius:99px;transition:width var(--dur-3) var(--ease-emph)}
+.bar .fill.ok{background:var(--done,#7BC47F)}
+.bar .fill.hot{background:var(--md-error,#E57373)}
+
+/* ── Кнопки состояний: один ряд, компактно ── */
+.dbtns{display:flex;flex-wrap:wrap;gap:7px;align-items:center}
+.dbtns .btn{padding:9px 13px;font-size:12.5px;white-space:nowrap}
+.dbtns.row{flex-wrap:nowrap}
+@media(max-width:380px){.dbtns.row{flex-wrap:wrap}.dbtns.row .btn{flex:1 1 45%}}
+
+/* ── Отступы: элементы не касаются друг друга ── */
+main{padding:14px 14px 40px}
+.viewhead{margin:4px 0 14px}
+#extra{margin-bottom:12px}
+.headrow{margin:2px 0 12px}
+.menucard{margin:0}
+.menurows .setrow{padding:10px 2px}
+.footer-note{padding:18px 12px 16px}
+.details-gap{height:12px}
+
+/* ── v1.2: компакт-колонки, шторка-кнопки, поля, теги-менеджер ── */
+.rowslist .rowitem, .rowslist .rowhead{grid-template-columns:minmax(0,1fr) 56px 74px 110px}
+.rowslist .rtitle{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rowslist .rtags{justify-content:flex-end;overflow:hidden}
+.sheet .dbtns{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}
+.sheet .dbtns .btn{justify-content:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:9px 10px;font-size:12.5px}
+.sheet .dbtns .btn.primary{grid-column:1/-1}
+.ninput{
+  width:100%;background:var(--sc-1);border:1px solid var(--outline-var);border-radius:12px;
+  padding:10px 13px;outline:none;font-size:13.5px;color:var(--on-surface);
+  transition:border-color var(--dur-2) var(--ease-emph);
+}
+.ninput:focus{border-color:var(--md-primary)}
+select.m3, .ninput{height:42px;box-sizing:border-box}
+textarea.note, textarea.nfield-text{border-radius:14px}
+.tcolor{padding:0;border-radius:8px}
+.setrow{gap:10px}
+.menurows .setrow{border-bottom:1px solid var(--outline-var)}
+.tagchip.demo{font-size:13px;padding:4px 12px}
+
+/* ── Прохождения: журнал в шторке ── */
+.plist{display:grid;gap:6px;margin:2px 0 4px}
+.pitem{display:flex;align-items:center;gap:10px;background:var(--sc-1);border-radius:12px;padding:8px 12px}
+.pitem .pd{font-weight:800;font-size:13px}
+.pitem .ph{color:var(--on-surface-var);font-size:12.5px;font-weight:700}
+.pitem button{margin-left:auto;border:none;background:none;cursor:pointer;width:30px;height:30px;border-radius:8px;display:inline-flex;align-items:center;justify-content:center;flex:none}
+.pitem button:hover{background:var(--sc-3)}
+.pitem button svg{width:15px;height:15px;fill:var(--on-surface-var)}
+.pempty{font-size:12.5px;color:var(--on-surface-var);padding:2px 2px 4px}
+#pldate,#plhours{background:var(--sc-1);border:1px solid var(--outline-var);border-radius:12px;padding:9px 12px;color:var(--on-surface);font-size:13px;outline:none;height:42px;box-sizing:border-box;font-family:inherit}
+#pldate:focus,#plhours:focus{border-color:var(--md-primary)}
+
+/* ── Табличный вид (table): заголовок и строки с одинаковыми колонками ── */
+.tablelist{display:grid;gap:6px}
+.thead{display:grid;grid-template-columns:minmax(0,1fr) 40px 46px 74px 50px 34px;gap:8px;padding:0 13px}
+.thead .tcol{border:none;background:none;color:var(--on-surface-var);font-size:10.5px;font-weight:800;
+  text-transform:uppercase;letter-spacing:.4px;cursor:pointer;padding:2px 0;font-family:inherit}
+.thead .tcol.on{color:var(--md-primary)}
+.trow{display:grid;grid-template-columns:minmax(0,1fr) 40px 46px 74px 50px 34px;gap:8px;align-items:center;
+  background:var(--sc-2);border:1px solid var(--outline-var);border-radius:12px;padding:9px 13px;cursor:pointer;
+  transition:transform var(--dur-2) var(--ease-spring)}
+.trow:hover{transform:translateY(-1px)}
+.trow.isdrop{opacity:.6}
+.trow .tt{font-weight:700;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.trow .ty{color:var(--on-surface-var);font-size:12px;text-align:right}
+.trow .ts{color:var(--md-primary);font-weight:800;font-size:12px;text-align:right;white-space:nowrap}
+.trow .td{font-weight:800;font-size:12px;white-space:nowrap}
+.trow .th{color:var(--on-surface-var);font-size:12px;text-align:right;white-space:nowrap}
+.trow .tp{color:var(--on-surface-var);font-size:12px;text-align:center;font-weight:800}
+
+/* ── Свайп между вкладками состояний ── */
+#listbox{transition:transform .14s ease,opacity .14s ease}
+#listbox.swipe-l{transform:translateX(-24px);opacity:.55}
+#listbox.swipe-r{transform:translateX(24px);opacity:.55}

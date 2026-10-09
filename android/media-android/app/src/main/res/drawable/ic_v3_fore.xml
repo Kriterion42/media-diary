@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Вариант 3 «Перо + крестовина»: перо и d-pad -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp" android:height="108dp"
+    android:viewportWidth="108" android:viewportHeight="108">
+    <!-- перо -->
+    <path android:fillColor="#C9C1FF"
+        android:pathData="M76,24 C60,28 44,42 37,62 l2,5 c5,1 10,0 14,-2 C64,56 74,40 76,26 z" />
+    <path android:fillColor="#5856A8"
+        android:pathData="M71,31 C61,39 51,51 45,62 l-3,-1 C47,49 58,37 71,31 z" />
+    <!-- наконечник -->
+    <path android:fillColor="#E5DEFF" android:pathData="M37,62 l-9,18 18,-9 z" />
+    <!-- крестовина -->
+    <path android:fillColor="#5856A8"
+        android:pathData="M64,60 h5 v7 h7 v5 h-7 v7 h-5 v-7 h-7 v-5 h7 z" />
+</vector>
